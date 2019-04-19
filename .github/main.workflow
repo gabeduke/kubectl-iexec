@@ -4,7 +4,7 @@ workflow "Release" {
 }
 
 workflow "Tag" {
-  resolves = ["Auto-commit", "push-changelog"]
+  resolves = ["auto-commit", "push-changelog"]
   on = "push"
 }
 
@@ -37,38 +37,38 @@ action "is-master" {
   secrets = ["GITHUB_TOKEN"]
 }
 
-action "tag" {
-  uses = "./.github/actions/git-tags"
-  needs = "is-master"
-  secrets = ["GITHUB_TOKEN"]
-}
+# action "tag" {
+#   uses = "./.github/actions/git-tags"
+#   needs = "is-master"
+#   secrets = ["GITHUB_TOKEN"]
+# }
 
-action "generate-tagged-changelog" {
-  uses = "docker://ferrarimarco/github-changelog-generator:1.15.0.pre.beta"
-  needs = "tag"
-  secrets = ["CHANGELOG_GITHUB_TOKEN"]
-  env = {
-    SRC_PATH = "/github/workspace"
-  }
-  args = "-u gabeduke -p kubectl-iexec --release-branch develop"
-}
+# action "generate-tagged-changelog" {
+#   uses = "docker://ferrarimarco/github-changelog-generator:1.15.0.pre.beta"
+#   needs = "tag"
+#   secrets = ["CHANGELOG_GITHUB_TOKEN"]
+#   env = {
+#     SRC_PATH = "/github/workspace"
+#   }
+#   args = "-u gabeduke -p kubectl-iexec --release-branch develop"
+# }
 
-action "push-changelog" {
-  uses = "docker://whizark/chandler"
-  needs = "generate-tagged-changelog"
-  secrets = ["CHANDLER_GITHUB_API_TOKEN"]
-  env = {
-    CHANDLER_WORKDIR = "/github/workspace"
-  }
-  args = "push"
-}
+# action "push-changelog" {
+#   uses = "docker://whizark/chandler"
+#   needs = "generate-tagged-changelog"
+#   secrets = ["CHANDLER_GITHUB_API_TOKEN"]
+#   env = {
+#     CHANDLER_WORKDIR = "/github/workspace"
+#   }
+#   args = "push"
+# }
 
 action "bumpver" {
   uses = "./.github/actions/bumpver"
-  needs = "tag"
+  # needs = "tag"
 }
 
-action "Auto-commit" {
+action "auto-commit" {
   uses = "./.github/actions/auto-commit"
   needs = ["bumpver"]
   args = "This is an auto-commit"
