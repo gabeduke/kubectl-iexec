@@ -69,7 +69,7 @@ action "bumpver" {
 }
 
 action "Auto-commit" {
-  uses = "docker://cdssnc/auto-commit-github-action"
+  uses = "./.github/actions/auto-commit"
   needs = ["bumpver"]
   args = "This is an auto-commit"
   secrets = ["GITHUB_TOKEN"]
