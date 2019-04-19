@@ -3,7 +3,7 @@ set -e
 
 BRANCH=patch-$(git rev-parse --short HEAD)
 
-git remote set-url origin https://gabeduke:${GITHUB_TOKEN}@github.com/gabeduke/kubectl-iexec.git
+# git remote set-url origin https://gabeduke:${GITHUB_TOKEN}@github.com/gabeduke/kubectl-iexec.git
 git config --global user.name 'autobot'
 git config --global user.email 'autobot@leetserve.com'
 git checkout -b "${BRANCH}"
