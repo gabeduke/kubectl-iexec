@@ -4,7 +4,7 @@ workflow "Release" {
 }
 
 workflow "Tag" {
-  resolves = ["Auto-commit", "push-changelog"]
+  resolves = ["auto-commit", "push-changelog"]
   on = "push"
 }
 
@@ -68,8 +68,8 @@ action "bumpver" {
   needs = "tag"
 }
 
-action "Auto-commit" {
-  uses = "docker://cdssnc/auto-commit-github-action"
+action "auto-commit" {
+  uses = "./.github/actions/auto-commit"
   needs = ["bumpver"]
   args = "This is an auto-commit"
   secrets = ["GITHUB_TOKEN"]
