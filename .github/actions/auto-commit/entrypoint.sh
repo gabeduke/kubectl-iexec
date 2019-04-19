@@ -13,5 +13,6 @@ git push -u origin "${BRANCH}"
 curl -v \
     -u gabeduke:$GITHUB_TOKEN \
     -H "Content-Type:application/json" \
+    -H "Accept: application/vnd.github.v3+json" \
     -X POST https://api.github.com/repos/gabeduke/kubectl-iexec/pulls \
     -d '{"title":"bumpver", "body": "bumpity bump", "head": "'"${BRANCH}"'", "base": "develop"}'
