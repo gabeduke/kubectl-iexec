@@ -1,4 +1,4 @@
-# Kubectl Remote Shell
+# Kubectl Interactive Exec
 
 ## Summary
 
