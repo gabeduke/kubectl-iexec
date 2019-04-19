@@ -4,7 +4,8 @@ workflow "Release" {
 }
 
 workflow "Tag" {
-  resolves = ["auto-commit", "push-changelog"]
+  resolves = ["auto-commit"]
+  #resolves = ["auto-commit", "push-changelog"]
   on = "push"
 }
 
