@@ -4,6 +4,7 @@ set -e
 BRANCH=patch-${GITHUB_SHA}
 
 git remote set-url origin https://gabeduke:${GITHUB_TOKEN}@github.com/gabeduke/kubectl-iexec.git
+git config --global user.name 'autobot'
 git config --global user.email 'autobot@leetserve.com'
 git checkout -b "${BRANCH}"
 git add -A && git commit -m '$*' --allow-empty
