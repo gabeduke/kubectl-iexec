@@ -9,7 +9,9 @@ LABEL "com.github.actions.description"="Auto-commits and changes back to the bra
 LABEL "com.github.actions.icon"="git"
 LABEL "com.github.actions.color"="orange"
 
-RUN apk add --update curl
+RUN apk add --update curl \
+    && apk update \
+    && apk upgrade
 COPY entrypoint.sh /entrypoint.sh
 
 ENTRYPOINT ["sh", "/entrypoint.sh"]
