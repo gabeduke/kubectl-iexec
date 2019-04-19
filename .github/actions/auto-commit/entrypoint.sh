@@ -1,7 +1,7 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 
-BRANCH=patch-${GITHUB_SHA}
+BRANCH=patch-$(git rev-parse --short HEAD)
 
 git remote set-url origin https://gabeduke:${GITHUB_TOKEN}@github.com/gabeduke/kubectl-iexec.git
 git config --global user.name 'autobot'
@@ -14,4 +14,4 @@ curl -v \
     -u gabeduke:$GITHUB_TOKEN \
     -H "Content-Type:application/json" \
     -X POST https://api.github.com/repos/gabeduke/kubectl-iexec/pulls \
-    -d '{"title":"bumpver", "body": "bumpity bump", "head": "'${BRANCH}'", "base": "develop"}'
+    -d '{"title":"bumpver", "body": "bumpity bump", "head": "'"${BRANCH}"'", "base": "develop"}'
