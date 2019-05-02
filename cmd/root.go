@@ -14,6 +14,7 @@ import (
 var (
 	container string
 	lvl       string
+	naked     bool
 	namespace string
 	vimMode   bool
 )
@@ -109,6 +110,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&container, "container", "c", "", "Container to exec into (defaults to container[0]")
 	rootCmd.PersistentFlags().StringVarP(&lvl, "log-level", "l", "", "log level (trace|debug|info|warn|error|fatal|panic)")
 	rootCmd.PersistentFlags().BoolVarP(&vimMode, "vimMode", "v", false, "Vim Mode enabled")
+	rootCmd.PersistentFlags().BoolVarP(&naked, "naked", "x", false, "Decolorize output")
 }
 
 func initLogger() {
