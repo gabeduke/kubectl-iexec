@@ -37,7 +37,7 @@ Flags:
   -l, --log-level string   log level (trace|debug|info|warn|error|fatal|panic)
   -x, --naked              Decolorize output
   -n, --namespace string   Namespace to search
-  -v, --vimMode            Vim Mode enabled
+  -v, --vim-mode            Vim Mode enabled
 ```
 
 
