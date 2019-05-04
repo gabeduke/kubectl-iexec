@@ -113,8 +113,8 @@ func (r *iexec) podPrompt(matchingPods []v1.Pod) error {
 		Selected: fmt.Sprintf("Namespace: {{ .Namespace | blue }} | Pod: %s {{ .Name | cyan }}", promptui.IconGood),
 	}
 
-	log.Debugf("naked: %v", naked)
 	if naked {
+		log.Debugf("naked: %v", naked)
 		templates = &promptui.SelectTemplates{
 			Active:   fmt.Sprintf("Namespace: {{ .Namespace }} | Pod: %s {{ .Name }}", promptui.IconSelect),
 			Inactive: "Namespace: {{ .Namespace }} | Pod: {{ .Name }}",
@@ -157,8 +157,8 @@ func (r *iexec) containerPrompt() error {
 		Selected: fmt.Sprintf("Container: %s {{ . | cyan }}", promptui.IconGood),
 	}
 
-	log.Debugf("naked: %v", naked)
 	if naked {
+		log.Debugf("naked: %v", naked)
 		templates = &promptui.SelectTemplates{
 			Active:   fmt.Sprintf("Container: %s {{ . }}", promptui.IconSelect),
 			Inactive: "Container: {{ . }}",
