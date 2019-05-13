@@ -32,11 +32,12 @@ Usage:
   iexec [pod filter] [remote command(s)] [flags]
 
 Flags:
-  -c, --container string   Container to exec into (defaults to container[0]
+  -c, --container string   Container to search
   -h, --help               help for iexec
   -l, --log-level string   log level (trace|debug|info|warn|error|fatal|panic)
+  -x, --naked              Decolorize output
   -n, --namespace string   Namespace to search
-  -v, --vimMode            Vim Mode enabled
+  -v, --vim-mode            Vim Mode enabled
 ```
 
 

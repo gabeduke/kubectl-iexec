@@ -108,9 +108,19 @@ func (r *iexec) podPrompt(matchingPods []v1.Pod) error {
 	}
 
 	templates := &promptui.SelectTemplates{
-		Active:   "Namespace: {{ .Namespace | blue }} | Pod: {{ .Name | cyan }}",
+		Active:   fmt.Sprintf("Namespace: {{ .Namespace | blue }} | Pod: %s {{ .Name | cyan }}", promptui.IconSelect),
 		Inactive: "Namespace: {{ .Namespace | blue }} | Pod: {{ .Name | magenta }}",
-		Selected: "Namespace: {{ .Namespace | blue }} | Pod: {{ .Name | cyan }}",
+		Selected: fmt.Sprintf("Namespace: {{ .Namespace | blue }} | Pod: %s {{ .Name | cyan }}", promptui.IconGood),
+	}
+
+	if naked {
+		log.Debugf("naked: %v", naked)
+		templates = &promptui.SelectTemplates{
+			Active:   fmt.Sprintf("Namespace: {{ .Namespace }} | Pod: %s {{ .Name }}", promptui.IconSelect),
+			Inactive: "Namespace: {{ .Namespace }} | Pod: {{ .Name }}",
+			Selected: fmt.Sprintf("Namespace: {{ .Namespace }} | Pod: %s {{ .Name }}", promptui.IconGood),
+		}
+
 	}
 
 	podsPrompt := promptui.Select{
@@ -141,9 +151,26 @@ func (r *iexec) containerPrompt() error {
 		return nil
 	}
 
+	templates := &promptui.SelectTemplates{
+		Active:   fmt.Sprintf("Container: %s {{ . | cyan }}", promptui.IconSelect),
+		Inactive: "Container: {{ . | magenta }}",
+		Selected: fmt.Sprintf("Container: %s {{ . | cyan }}", promptui.IconGood),
+	}
+
+	if naked {
+		log.Debugf("naked: %v", naked)
+		templates = &promptui.SelectTemplates{
+			Active:   fmt.Sprintf("Container: %s {{ . }}", promptui.IconSelect),
+			Inactive: "Container: {{ . }}",
+			Selected: fmt.Sprintf("Container: %s {{ . }}", promptui.IconGood),
+		}
+
+	}
+
 	containersPrompt := promptui.Select{
 		Label:     "Select Container",
 		Items:     containers,
+		Templates: templates,
 		IsVimMode: vimMode,
 	}
 
