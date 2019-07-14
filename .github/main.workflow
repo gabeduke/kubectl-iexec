@@ -1,26 +1,13 @@
+######################
+## RELEASE WORKFLOW ##
+######################
+
 workflow "Release" {
   resolves = ["goreleaser"]
   on = "release"
 }
 
-workflow "Tag" {
-  resolves = ["auto-commit", "push-changelog"]
-  on = "push"
-}
-
-workflow "Test" {
-  resolves = ["codecov"]
-  on = "push"
-}
-
-action "generate-release-changelog" {
-  uses = "docker://ferrarimarco/github-changelog-generator:1.15.0.pre.beta"
-  secrets = ["CHANGELOG_GITHUB_TOKEN"]
-  env = {
-    SRC_PATH = "/github/workspace"
-  }
-  args = "-u gabeduke -p kubectl-iexec --release-branch develop"
-}
+## GORELEASER RESOLVES ##
 
 action "goreleaser" {
   uses = "docker://goreleaser/goreleaser"
@@ -31,16 +18,56 @@ action "goreleaser" {
   args = "release --release-notes=/github/workspace/CHANGELOG.md"
 }
 
-action "is-master" {
+action "generate-release-changelog" {
+  uses = "docker://ferrarimarco/github-changelog-generator:1.15.0.pre.beta"
+  secrets = ["CHANGELOG_GITHUB_TOKEN"]
+  needs = "created-filter"
+  env = {
+    SRC_PATH = "/github/workspace"
+  }
+  args = "-u gabeduke -p kubectl-iexec --release-branch develop"
+}
+
+action "created-filter" {
   uses = "actions/bin/filter@master"
-  args = "branch master"
+  args = "action created"
+}
+
+
+##################
+## TAG WORKFLOW ##
+##################
+
+workflow "Tag" {
+  resolves = ["auto-commit", "push-changelog"]
+  on = "push"
+}
+
+## AUTO-COMMIT RESOLVES ##
+
+action "auto-commit" {
+  uses = "./.github/actions/auto-commit"
+  needs = ["bumpver"]
+  args = "This is an auto-commit"
   secrets = ["GITHUB_TOKEN"]
 }
 
-action "tag" {
-  uses = "./.github/actions/git-tags"
-  needs = "is-master"
-  secrets = ["GITHUB_TOKEN"]
+
+action "bumpver" {
+  uses = "./.github/actions/bumpver"
+  needs = "tag"
+}
+
+## PUSH-CHANGELOG RESOLVES ##
+
+action "push-changelog" {
+  uses = "docker://whizark/chandler"
+  needs = "generate-tagged-changelog"
+  secrets = ["CHANDLER_GITHUB_API_TOKEN"]
+  env = {
+    CHANDLER_WORKDIR = "/github/workspace"
+  }
+  args = "push"
 }
 
 action "generate-tagged-changelog" {
@@ -53,42 +80,51 @@ action "generate-tagged-changelog" {
   args = "-u gabeduke -p kubectl-iexec --release-branch develop"
 }
 
-action "push-changelog" {
-  uses = "docker://whizark/chandler"
-  needs = "generate-tagged-changelog"
-  secrets = ["CHANDLER_GITHUB_API_TOKEN"]
-  env = {
-    CHANDLER_WORKDIR = "/github/workspace"
-  }
-  args = "push"
-}
+## COMMON RESOLVES ##
 
-action "bumpver" {
-  uses = "./.github/actions/bumpver"
-  needs = "tag"
-}
-
-action "auto-commit" {
-  uses = "./.github/actions/auto-commit"
-  needs = ["bumpver"]
-  args = "This is an auto-commit"
+action "tag" {
+  uses = "./.github/actions/git-tags"
+  needs = "is-master"
   secrets = ["GITHUB_TOKEN"]
 }
 
-action "fmt" {
-  uses = "pleo-io/actions/gofmt@master"
-  args = "fmt"
+action "is-master" {
+  uses = "actions/bin/filter@master"
+  args = "branch master"
+  secrets = ["GITHUB_TOKEN"]
 }
+
+##################:
+## TEST WORKFLOW ##
+##################:
+
+workflow "Test" {
+  resolves = ["fmt", "lint", "codecov"]
+  on = "pull_request"
+}
+
+## FMT RESOLVES ##
+
+action "fmt" {
+  uses = "./.github/actions/golang"
+  args = "fmt"
+  secrets = ["GITHUB_TOKEN"]
+}
+
+## LINT RESOLVES ##
 
 action "lint" {
-  needs = ["fmt"]
   uses = "./.github/actions/golang"
   args = "lint"
+  secrets = ["GITHUB_TOKEN"]
 }
 
+## CODECOV RESOLVES ##
+
 action "test" {
-  needs = ["lint"]
-  uses = "./.github/actions/gotest"
+  uses = "./.github/actions/golang"
+  args = "test"
+  secrets = ["GITHUB_TOKEN"]
 }
 
 action "codecov" {
