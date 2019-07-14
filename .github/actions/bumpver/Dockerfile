@@ -5,7 +5,7 @@ RUN apk add --no-cache \
 
 LABEL "com.github.actions.name"="bumpver"
 LABEL "com.github.actions.description"="Push a tag to git"
-LABEL "com.github.actions.icon"="mic"
+LABEL "com.github.actions.icon"="github"
 LABEL "com.github.actions.color"="purple"
 
 LABEL "repository"="http://github.com/gabeduke/kubectl-iexec"
