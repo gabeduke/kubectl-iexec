@@ -30,7 +30,13 @@ action "generate-release-changelog" {
 
 action "created-filter" {
   uses = "actions/bin/filter@master"
-  args = "action created"
+  args = "action create"
+  needs = ["tag-filter"]
+}
+
+action "tag-filter" {
+  uses = "actions/bin/filter@master"
+  args = "tag"
 }
 
 
