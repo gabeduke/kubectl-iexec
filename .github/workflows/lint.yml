@@ -1,0 +1,17 @@
+on:
+  pull_request:
+    branches:
+      - master
+      - develop
+name: Lint
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: lint
+      uses: ./.github/actions/golang
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        args: lint
