@@ -1,0 +1,17 @@
+on:
+  pull_request:
+    branches:
+      - master
+      - develop
+name: Fmt
+jobs:
+  fmt:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: fmt
+      uses: ./.github/actions/golang
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        args: fmt
