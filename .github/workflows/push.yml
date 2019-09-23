@@ -1,0 +1,38 @@
+name: Tag
+on:
+  push:
+    branches:
+      - master
+jobs:
+  tag-master:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: tag
+      uses: ./.github/actions/git-tags
+      env:
+        VERSION: "${GITHUB_WORKSPACE}/.release"
+        # must be a user token in order to trigger the release flow
+        GITHUB_TOKEN: ${{ secrets.USER_GITHUB_TOKEN }}
+    - name: generate-tagged-changelog
+      uses: docker://ferrarimarco/github-changelog-generator:1.15.0.pre.beta
+      env:
+        CHANGELOG_GITHUB_TOKEN: ${{ secrets.CHANGELOG_GITHUB_TOKEN }}
+        SRC_PATH: /github/workspace
+      with:
+        args: -u gabeduke -p level --release-branch develop
+    - name: bumpver
+      uses: ./.github/actions/bumpver
+    - name: push-changelog
+      uses: docker://whizark/chandler
+      env:
+        CHANDLER_GITHUB_API_TOKEN: ${{ secrets.CHANDLER_GITHUB_API_TOKEN }}
+        CHANDLER_WORKDIR: /github/workspace
+      with:
+        args: push
+    - name: auto-commit
+      uses: ./.github/actions/auto-commit
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        args: This is an auto-commit

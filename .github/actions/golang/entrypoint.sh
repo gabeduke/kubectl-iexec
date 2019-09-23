@@ -71,8 +71,15 @@ go_lint () {
 go_test() {
     echo "Running go test"
 
+    if [ -z "$CODECOV_TOKEN" ]
+    then
+        echo "Please provide an upload token from codecov.io"
+        exit 1
+    fi
+
+    # short mode for printing results to PR
     set +e
-    go test ./... -v -short | grep FAIL > test-results.txt
+    go test ./... -v -short -race | grep FAIL > test-results.txt
     SUCCESS=${PIPESTATUS[0]}
     set -e
 
@@ -83,7 +90,18 @@ go_test() {
         exit $SUCCESS
     fi
 
-    exit $SUCCESS
+    # verbose for upload to codecov
+    set +e
+    go test ./... -race -coverprofile=coverage.txt -covermode=atomic
+    SUCCESS=$?
+    set -e
+
+    if [ $SUCCESS != 0 ]; then
+        exit $SUCCESS
+    fi
+
+    curl -s https://codecov.io/bash | bash -s -- -t $CODECOV_TOKEN -f ./coverage.txt
+
 }
 
 format_code() {

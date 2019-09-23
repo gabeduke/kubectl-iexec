@@ -1,0 +1,26 @@
+on:
+  push:
+    tags: "*"
+name: Release
+jobs:
+  created-filter:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: "actions/bin/filter@master"
+      name: created-filter
+      with:
+        args: tag
+    - name: generate-release-changelog
+      uses: docker://ferrarimarco/github-changelog-generator:1.15.0.pre.beta
+      env:
+        CHANGELOG_GITHUB_TOKEN: ${{ secrets.CHANGELOG_GITHUB_TOKEN }}
+        SRC_PATH: /github/workspace
+      with:
+        args: -u gabeduke -p level --release-branch develop
+    - name: goreleaser
+      uses: docker://goreleaser/goreleaser
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        args: release --release-notes=/github/workspace/CHANGELOG.md

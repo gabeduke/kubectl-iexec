@@ -1,7 +1,7 @@
 FROM alpine:latest
 
 RUN apk add --no-cache \
-    git
+    git curl bash
 
 LABEL "com.github.actions.name"="Git tagger"
 LABEL "com.github.actions.description"="Push a tag to git"
