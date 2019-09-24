@@ -20,7 +20,7 @@ jobs:
         CHANGELOG_GITHUB_TOKEN: ${{ secrets.CHANGELOG_GITHUB_TOKEN }}
         SRC_PATH: /github/workspace
       with:
-        args: -u gabeduke -p level --release-branch develop
+        args: -u gabeduke -p kubectl-iexec --release-branch develop
     - name: bumpver
       uses: ./.github/actions/bumpver
     - name: push-changelog
