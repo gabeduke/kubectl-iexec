@@ -16,3 +16,5 @@ dist
 .vscode
 
 CHANGELOG.md
+test-results.txt
+coverage.txt
