@@ -1,0 +1,26 @@
+name: kubectl-iexec
+version: git
+summary: Interactive 'exec' command for kubectl
+description: >
+  Kubectl-iexec is an interactive filter and selection tool for the kubectl 'exec' command.
+
+  Usage:
+    kubectl iexec [pod-filter] [command to run inside pod]
+
+  Example:
+    # this will open a shell into the selected nginx pod and open a bash prompt
+    kubectl iexec nginx /bin/bash
+
+confinement: devmode
+base: core18
+parts:
+  kubectl-iexec:
+    plugin: go-local
+    go-importpath: github.com/gabeduke/kubectl-iexec
+    source: .
+    source-type: git
+    build-packages:
+      - gcc
+apps:
+  kubectl-iexec:
+    command: bin/kubectl-iexec
