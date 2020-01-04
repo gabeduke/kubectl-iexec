@@ -11,7 +11,7 @@ description: >
     # this will open a shell into the selected nginx pod and open a bash prompt
     iexec nginx /bin/bash
 
-confinement: devmode
+confinement: classic
 base: core18
 parts:
   iexec:
