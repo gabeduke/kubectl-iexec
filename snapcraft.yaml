@@ -22,5 +22,5 @@ parts:
     build-packages:
       - gcc
 apps:
-  kubectl-iexec:
+  iexec:
     command: bin/kubectl-iexec
