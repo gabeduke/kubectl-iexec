@@ -1,4 +1,4 @@
-name: kubectl-iexec
+name: iexec
 version: git
 summary: Interactive 'exec' command for kubectl
 description: >
