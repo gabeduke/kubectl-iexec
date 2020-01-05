@@ -1,3 +1,7 @@
+![](https://github.com/gabeduke/kubectl-iexec/workflows/Test/badge.svg)
+![](https://github.com/gabeduke/kubectl-iexec/workflows/Lint/badge.svg)
+![](https://github.com/gabeduke/kubectl-iexec/workflows/Fmt/badge.svg)
+
 # Kubectl Interactive Exec
 
 ## Summary
