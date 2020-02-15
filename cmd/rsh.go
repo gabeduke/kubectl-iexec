@@ -23,6 +23,8 @@ import (
 	"k8s.io/client-go/tools/remotecommand"
 )
 
+type sizeQueue chan remotecommand.TerminalSize
+
 // get all pods from kubernetes API
 func (r *iexec) getAllPods() (*corev1.PodList, error) {
 	pods, err := r.client.CoreV1().Pods(r.namespace).List(metav1.ListOptions{})
@@ -276,6 +278,12 @@ func (r *iexec) exec() error {
 	if err != nil {
 		return err
 	}
+
+	termWidth, termHeight, _ := terminal.GetSize(0)
+	termSize := remotecommand.TerminalSize { Width: uint16(termWidth), Height: uint16(termHeight) }
+	s := make(sizeQueue, 1)
+	s <- termSize
+
 	defer func() {
 		err := terminal.Restore(0, oldState)
 		if err != nil {
@@ -289,6 +297,7 @@ func (r *iexec) exec() error {
 		Stdout: os.Stdout,
 		Stderr: os.Stderr,
 		Tty:    true,
+		TerminalSizeQueue: s,
 	})
 	if err != nil {
 		return err
@@ -296,4 +305,12 @@ func (r *iexec) exec() error {
 
 	fmt.Println()
 	return nil
+}
+
+func (s sizeQueue) Next() *remotecommand.TerminalSize {
+	size, ok := <-s
+	if !ok {
+		return nil
+	}
+	return &size
 }
