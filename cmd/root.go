@@ -10,12 +10,12 @@ import (
 )
 
 var (
-	remoteCmd []string
+	remoteCmd       []string
 	containerFilter string
-	lvl       string
-	naked     bool
-	namespace string
-	vimMode   bool
+	lvl             string
+	naked           bool
+	namespace       string
+	vimMode         bool
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -40,8 +40,8 @@ kubectl iexec busybox cat /etc/hosts
 
 		config := &iexec.Config{
 			Namespace: namespace,
-			Naked: naked,
-			VimMode: vimMode,
+			Naked:     naked,
+			VimMode:   vimMode,
 		}
 
 		podFilter := args[0]

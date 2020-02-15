@@ -23,32 +23,32 @@ import (
 
 type sizeQueue chan remotecommand.TerminalSize
 
-type Iexecer interface{
+type Iexecer interface {
 	Do() error
 }
 
 type Config struct {
 	Namespace string
-	Naked bool
-	VimMode bool
+	Naked     bool
+	VimMode   bool
 }
 
 type Iexec struct {
 	client    kubernetes.Interface
-	config 	  *Config
+	config    *Config
 	container string
 	pod       v1.Pod
 	remoteCmd []string
-	search 	  string
+	search    string
 }
 
 func NewIexec(podFilter string, containerFilter string, remoteCmd []string, config *Config) *Iexec {
 
 	iexec := Iexec{
-		search: podFilter,
+		search:    podFilter,
 		container: containerFilter,
 		remoteCmd: remoteCmd,
-		config: config,
+		config:    config,
 	}
 
 	clientConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
@@ -73,8 +73,8 @@ func NewIexec(podFilter string, containerFilter string, remoteCmd []string, conf
 	}).Debug("iexec struct values...")
 
 	log.WithFields(log.Fields{
-		"Vim Mode": config.VimMode,
-		"Naked": config.Naked,
+		"Vim Mode":  config.VimMode,
+		"Naked":     config.Naked,
 		"Namespace": config.Namespace,
 	}).Debug("iexec config values...")
 

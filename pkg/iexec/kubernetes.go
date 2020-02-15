@@ -84,4 +84,3 @@ func (r *Iexec) matchPods(pods *corev1.PodList) ([]v1.Pod, error) {
 
 	return matchingPods, nil
 }
-
