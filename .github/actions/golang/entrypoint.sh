@@ -71,12 +71,6 @@ go_lint () {
 go_test() {
     echo "Running go test"
 
-    if [ -z "$CODECOV_TOKEN" ]
-    then
-        echo "Please provide an upload token from codecov.io"
-        exit 1
-    fi
-
     # short mode for printing results to PR
     set +e
     go test ./... -v -short -race | grep FAIL > test-results.txt
@@ -100,7 +94,15 @@ go_test() {
         exit $SUCCESS
     fi
 
-    curl -s https://codecov.io/bash | bash -s -- -t $CODECOV_TOKEN -f ./coverage.txt
+
+    if [ -z "$CODECOV_TOKEN" ]
+    then
+        echo "No Codecov token provided. Skipping.."
+        exit $SUCCESS
+    else
+        curl -s https://codecov.io/bash | bash -s -- -t $CODECOV_TOKEN -f ./coverage.txt
+        exit $SUCCESS
+    fi
 
 }
 
