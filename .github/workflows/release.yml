@@ -20,3 +20,5 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         args: release --release-notes=/github/workspace/CHANGELOG.md
+    - name: Update new version in krew-index
+      uses: rajatjindal/krew-release-bot@v0.0.36
