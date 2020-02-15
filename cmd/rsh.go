@@ -280,7 +280,7 @@ func (r *iexec) exec() error {
 	}
 
 	termWidth, termHeight, _ := terminal.GetSize(0)
-	termSize := remotecommand.TerminalSize { Width: uint16(termWidth), Height: uint16(termHeight) }
+	termSize := remotecommand.TerminalSize{Width: uint16(termWidth), Height: uint16(termHeight)}
 	s := make(sizeQueue, 1)
 	s <- termSize
 
@@ -293,10 +293,10 @@ func (r *iexec) exec() error {
 
 	// Connect this process' std{in,out,err} to the remote shell process.
 	err = exec.Stream(remotecommand.StreamOptions{
-		Stdin:  os.Stdin,
-		Stdout: os.Stdout,
-		Stderr: os.Stderr,
-		Tty:    true,
+		Stdin:             os.Stdin,
+		Stdout:            os.Stdout,
+		Stderr:            os.Stderr,
+		Tty:               true,
 		TerminalSizeQueue: s,
 	})
 	if err != nil {
