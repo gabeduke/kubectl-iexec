@@ -1,20 +1,18 @@
-package cmd
+package iexec
 
 import (
-	"sort"
+	"k8s.io/client-go/kubernetes"
 
 	"github.com/manifoldco/promptui"
 
 	"fmt"
 	"os"
-	"strings"
 
 	"golang.org/x/crypto/ssh/terminal"
 
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 
 	// auth needed for proxy
@@ -25,86 +23,69 @@ import (
 
 type sizeQueue chan remotecommand.TerminalSize
 
-// get all pods from kubernetes API
-func (r *iexec) getAllPods() (*corev1.PodList, error) {
-	pods, err := r.client.CoreV1().Pods(r.namespace).List(metav1.ListOptions{})
+type Iexecer interface{
+	Do() error
+}
+
+type Config struct {
+	Namespace string
+	Naked bool
+	VimMode bool
+}
+
+type Iexec struct {
+	client    kubernetes.Interface
+	config 	  *Config
+	container string
+	pod       v1.Pod
+	remoteCmd []string
+	search 	  string
+}
+
+func NewIexec(podFilter string, containerFilter string, remoteCmd []string, config *Config) *Iexec {
+
+	iexec := Iexec{
+		search: podFilter,
+		container: containerFilter,
+		remoteCmd: remoteCmd,
+		config: config,
+	}
+
+	clientConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+		clientcmd.NewDefaultClientConfigLoadingRules(),
+		&clientcmd.ConfigOverrides{},
+	)
+
+	kubeconfig, err := clientConfig.ClientConfig()
 	if err != nil {
-		return pods, err
+		log.Fatal(err)
 	}
 
-	log.WithFields(log.Fields{
-		"pods":      len(pods.Items),
-		"namespace": r.namespace,
-	}).Debug("total pods discovered...")
-
-	return pods, nil
-
-}
-
-// get all containers for pod
-func (r *iexec) getAllContainers(pod v1.Pod) ([]string, error) {
-	log.WithFields(log.Fields{
-		"PodName": pod.GetName(),
-	}).Infof("Get all containers for pod...")
-	var s []string
-
-	containers, err := r.client.CoreV1().Pods(pod.GetNamespace()).Get(pod.GetName(), metav1.GetOptions{})
-	log.Tracef("%+v\n", containers)
+	iexec.client, err = kubernetes.NewForConfig(kubeconfig)
 	if err != nil {
-		return nil, err
-	}
-
-	l := containers.Spec.Containers
-	log.Tracef("%+v\n", l)
-
-	for i, c := range l {
-		log.WithFields(log.Fields{
-			"index":         i,
-			"ContainerName": c.Name,
-		}).Infof("Found container...")
-		s = append(s, c.Name)
+		log.Fatal(err)
 	}
 
 	log.WithFields(log.Fields{
-		"[]containers": s,
-	}).Debugf("containers []String")
-	return s, nil
+		"container":      iexec.container,
+		"remote command": iexec.remoteCmd,
+		"search filter":  iexec.search,
+	}).Debug("iexec struct values...")
 
-}
-
-func (r *iexec) matchPods(pods *corev1.PodList) ([]v1.Pod, error) {
 	log.WithFields(log.Fields{
-		"SearchFilter": r.search,
-	}).Infof("Get all pods for search filter...")
-	var matchingPods []v1.Pod
+		"Vim Mode": config.VimMode,
+		"Naked": config.Naked,
+		"Namespace": config.Namespace,
+	}).Debug("iexec config values...")
 
-	for i, pod := range pods.Items {
-		if strings.Contains(pod.GetName(), r.search) {
-			matchingPods = append(matchingPods, pod)
-			log.WithFields(log.Fields{
-				"PodName": pod.GetName(),
-				"index":   i,
-			}).Infof("Found pod...")
-		}
-	}
-
-	if len(matchingPods) == 0 {
-		err := fmt.Errorf("No pods found for filter: %s", r.search)
-		return nil, err
-	}
-
-	sort.Slice(matchingPods[:], func(i, j int) bool {
-		return matchingPods[i].GetName() < matchingPods[j].GetName()
-	})
-
-	return matchingPods, nil
+	return &iexec
 }
 
-func (r *iexec) podPrompt(matchingPods []v1.Pod) error {
+func (r *Iexec) podPrompt(matchingPods []v1.Pod) error {
 
 	if len(matchingPods) == 1 {
 		r.pod = matchingPods[0]
-		r.namespace = r.pod.GetNamespace()
+		r.config.Namespace = r.pod.GetNamespace()
 		fmt.Printf("Found matching pod (%s) with filter: %s\n", r.pod.Name, r.search)
 		return nil
 	}
@@ -115,8 +96,7 @@ func (r *iexec) podPrompt(matchingPods []v1.Pod) error {
 		Selected: fmt.Sprintf("Namespace: {{ .Namespace | blue }} | Pod: %s {{ .Name | cyan }}", promptui.IconGood),
 	}
 
-	if naked {
-		log.Debugf("naked: %v", naked)
+	if r.config.Naked {
 		templates = &promptui.SelectTemplates{
 			Active:   fmt.Sprintf("Namespace: {{ .Namespace }} | Pod: %s {{ .Name }}", promptui.IconSelect),
 			Inactive: "Namespace: {{ .Namespace }} | Pod: {{ .Name }}",
@@ -129,7 +109,7 @@ func (r *iexec) podPrompt(matchingPods []v1.Pod) error {
 		Label:     "Select Pod",
 		Items:     matchingPods,
 		Templates: templates,
-		IsVimMode: vimMode,
+		IsVimMode: r.config.VimMode,
 	}
 
 	i, _, err := podsPrompt.Run()
@@ -138,11 +118,11 @@ func (r *iexec) podPrompt(matchingPods []v1.Pod) error {
 	}
 
 	r.pod = matchingPods[i]
-	r.namespace = r.pod.GetNamespace()
+	r.config.Namespace = r.pod.GetNamespace()
 	return nil
 }
 
-func (r *iexec) containerPrompt() error {
+func (r *Iexec) containerPrompt() error {
 
 	containers, err := r.getAllContainers(r.pod)
 	if err != nil {
@@ -159,8 +139,7 @@ func (r *iexec) containerPrompt() error {
 		Selected: fmt.Sprintf("Container: %s {{ . | cyan }}", promptui.IconGood),
 	}
 
-	if naked {
-		log.Debugf("naked: %v", naked)
+	if r.config.Naked {
 		templates = &promptui.SelectTemplates{
 			Active:   fmt.Sprintf("Container: %s {{ . }}", promptui.IconSelect),
 			Inactive: "Container: {{ . }}",
@@ -173,7 +152,7 @@ func (r *iexec) containerPrompt() error {
 		Label:     "Select Container",
 		Items:     containers,
 		Templates: templates,
-		IsVimMode: vimMode,
+		IsVimMode: r.config.VimMode,
 	}
 
 	c, _, err := containersPrompt.Run()
@@ -186,7 +165,7 @@ func (r *iexec) containerPrompt() error {
 	return nil
 }
 
-func (r *iexec) do() error {
+func (r *Iexec) Do() error {
 	pods, err := r.getAllPods()
 	if err != nil {
 		return err
@@ -210,7 +189,7 @@ func (r *iexec) do() error {
 	log.WithFields(log.Fields{
 		"pod":       r.pod.GetName(),
 		"container": r.container,
-		"namespace": r.namespace,
+		"namespace": r.config.Namespace,
 	}).Info("Exec to pod...")
 
 	err = r.exec()
@@ -220,7 +199,7 @@ func (r *iexec) do() error {
 	return nil
 }
 
-func (r *iexec) exec() error {
+func (r *Iexec) exec() error {
 	// Instantiate loader for kubeconfig file.
 	kubeconfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
 		clientcmd.NewDefaultClientConfigLoadingRules(),
@@ -244,7 +223,7 @@ func (r *iexec) exec() error {
 
 	req := r.client.CoreV1().RESTClient().
 		Post().
-		Namespace(r.namespace).
+		Namespace(r.config.Namespace).
 		Resource("pods").
 		Name(r.pod.GetName()).
 		SubResource("exec").
@@ -263,7 +242,7 @@ func (r *iexec) exec() error {
 
 	log.WithFields(log.Fields{
 		"container":      r.container,
-		"namespace":      r.namespace,
+		"namespace":      r.config.Namespace,
 		"remote command": r.remoteCmd,
 		"search filter":  r.search,
 	}).Debug("iexec struct values...")
