@@ -1,0 +1,28 @@
+apiVersion: krew.googlecontainertools.github.com/v1alpha2
+kind: Plugin
+metadata:
+  name: iexec
+spec:
+  version: {{ .TagName }}
+  homepage: https://github.com/gabeduke/kubectl-iexec
+  platforms:
+    - selector:
+        matchLabels:
+          os: darwin
+          arch: amd64
+      {{addURIAndSha "https://github.com/gabeduke/kubectl-iexec/releases/download/{{ .TagName }}/kubectl-iexec_{{ .TagName }}_darwin_amd64.tar.gz" .TagName }}
+      bin: kubectl-iexec
+    - selector:
+        matchLabels:
+          os: linux
+          arch: amd64
+      {{addURIAndSha "https://github.com/gabeduke/kubectl-iexec/releases/download/{{ .TagName }}/kubectl-iexec_{{ .TagName }}_darwin_amd64.tar.gz" .TagName }}
+      bin: kubectl-iexec
+  shortDescription: Interactive selection tool for `kubectl exec`
+  description: |
+    Interactive pod and container selector for `kubectl exec`
+  caveats: |
+    To get help run: kubectl iexec --help
+    Examples:
+    Run command in container:
+      kubectl iexec [pod] [command]
