@@ -10,13 +10,13 @@ spec:
         matchLabels:
           os: darwin
           arch: amd64
-      {{addURIAndSha "https://github.com/gabeduke/kubectl-iexec/releases/download/{{ .TagName }}/kubectl-iexec_{{ .TagName }}_Darwin_x86_64.tar.gz" .TagName }}
+      {{addURIAndSha "https://github.com/gabeduke/kubectl-iexec/releases/download/{{ .TagName }}/kubectl-iexec_{{ .TagName }}_Darwin_x86_64.tar.gz" .TagName | indent 6 }}
       bin: kubectl-iexec
     - selector:
         matchLabels:
           os: linux
           arch: amd64
-      {{addURIAndSha "https://github.com/gabeduke/kubectl-iexec/releases/download/{{ .TagName }}/kubectl-iexec_{{ .TagName }}_Linux_x86_64.tar.gz" .TagName }}
+      {{addURIAndSha "https://github.com/gabeduke/kubectl-iexec/releases/download/{{ .TagName }}/kubectl-iexec_{{ .TagName }}_Linux_x86_64.tar.gz" .TagName | indent 6}}
       bin: kubectl-iexec
   shortDescription: Interactive selection tool for `kubectl exec`
   description: |
