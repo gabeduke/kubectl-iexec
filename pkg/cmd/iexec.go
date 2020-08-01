@@ -36,8 +36,6 @@ Arg[2...] are the commands to be executed in the container
 	# then run: 'kubectl exec [pod_name] [container_name] /bin/sh'
 	%[1]s iexec multi_container_pod -c second_container
 `
-
-	errNoContext = fmt.Errorf("no context is currently set, use %q to select a new one", "kubectl config use-context <context>")
 )
 
 // IExecOptions
