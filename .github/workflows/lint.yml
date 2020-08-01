@@ -1,12 +1,11 @@
+name: Lint
 on:
-  tags:
-    - v*
   push:
+    tags:
     branches:
       - master
       - develop
   pull_request:
-name: Lint
 jobs:
   golangci:
     name: lint
