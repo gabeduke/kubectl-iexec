@@ -7,18 +7,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
+    - name: Set output
+      id: vars
+      run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
     - name: generate-release-changelog
       uses: docker://ferrarimarco/github-changelog-generator:1.15.0.pre.beta
       env:
         CHANGELOG_GITHUB_TOKEN: ${{ secrets.CHANGELOG_GITHUB_TOKEN }}
         SRC_PATH: /github/workspace
       with:
-        args: -u gabeduke -p kubectl-iexec --release-branch develop
+        args: -u gabeduke -p kubectl-iexec --release-branch develop --future-release ${{ steps.vars.outputs.tag }}
     - name: goreleaser
       uses: docker://goreleaser/goreleaser
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        args: release --release-notes=/github/workspace/CHANGELOG.md
     - name: Update new version in krew-index
       uses: rajatjindal/krew-release-bot@v0.0.36
