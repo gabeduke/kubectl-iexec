@@ -31,8 +31,8 @@ jobs:
         run: go build -v .
 
       - name: Fmt
-        with:
-          entrypoint: ./hack/fmt.sh
+        run: |
+          ./hack/fmt.sh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -40,5 +40,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CODECOV_TOKEN: ${{secrets.CODECOV_TOKEN}} #required
-        with:
-          entrypoint: ./hack/test.sh
+        run: |
+           ./hack/test.sh
