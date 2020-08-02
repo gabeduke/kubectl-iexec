@@ -1,10 +1,7 @@
 #!/usr/bin/env bash
 
-set -o pipefail
-set -e
-
-APP_DIR="/go/src/github.com/${GITHUB_REPOSITORY}/"
-mkdir -p "${APP_DIR}" && cp -r ./ "${APP_DIR}" && cd "${APP_DIR}"
+set -ef pipefail
+set -x
 
 go_fmt () {
     echo "Running go fmt"
@@ -13,10 +10,10 @@ go_fmt () {
     FIND_EXEC="find . -type f -iname '*.go'"
 
     # Get a list of files that we are interested in
-    CHECK_FILES=$(eval ${FIND_EXEC})
+    CHECK_FILES=$(eval "${FIND_EXEC}")
 
     set +e
-    test -z "$(gofmt -l -d -e ${CHECK_FILES})"
+    test -z "$(gofmt -l -d -e "${CHECK_FILES}")"
     SUCCESS=$?
     set -e
 
@@ -28,7 +25,7 @@ go_fmt () {
 
     # Get list of unformatted files.
     set +e
-    ISSUE_FILES=$(gofmt -l ${CHECK_FILES})
+    ISSUE_FILES=$(gofmt -l "${CHECK_FILES}")
     echo "${ISSUE_FILES}"
     set -e
 
@@ -57,11 +54,11 @@ go_test() {
     SUCCESS=${PIPESTATUS[0]}
     set -e
 
-    if [ $SUCCESS != 0 ]; then
+    if [ "$SUCCESS" != 0 ]; then
         FAILED=$(cat test-results.txt)
         FAILED=$(format_code "${FAILED}" less)
         post "Go Test" "${FAILED}"
-        exit $SUCCESS
+        exit "$SUCCESS"
     fi
 
     # verbose for upload to codecov
@@ -74,15 +71,16 @@ go_test() {
         exit $SUCCESS
     fi
 
-
+    set+x
     if [ -z "$CODECOV_TOKEN" ]
     then
         echo "No Codecov token provided. Skipping.."
         exit $SUCCESS
     else
-        curl -s https://codecov.io/bash | bash -s -- -t $CODECOV_TOKEN -f ./coverage.txt
+        curl -s https://codecov.io/bash | bash -s -- -t "$CODECOV_TOKEN" -f ./coverage.txt
         exit $SUCCESS
     fi
+    set -x
 
 }
 
@@ -107,7 +105,7 @@ post() {
 ${FAILED}
 "
     PAYLOAD=$(echo '{}' | jq --arg body "$COMMENT" '.body = $body')
-    COMMENTS_URL=$(cat /github/workflow/event.json | jq -r .pull_request.comments_url)
+    COMMENTS_URL=$(cat < /github/workflow/event.json | jq -r .pull_request.comments_url)
 
     if [ "COMMENTS_URL" != null ]; then
         set +e
@@ -116,13 +114,3 @@ ${FAILED}
     fi
 }
 
-### MAIN
-
-case "$1" in
-'fmt')
-go_fmt
-;;
-'test')
-go_test
-;;
-esac

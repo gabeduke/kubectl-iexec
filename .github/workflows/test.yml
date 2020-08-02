@@ -1,22 +1,44 @@
 on:
+  push:
+    branches: [ develop ]
   pull_request:
     branches:
-      - master
       - develop
-  push:
-    branches:
       - master
+      - main
 
-name: Test
 jobs:
-  test:
+
+  build:
+    name: Build
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
-    - name: test
-      uses: ./.github/actions/golang
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        CODECOV_TOKEN: ${{secrets.CODECOV_TOKEN}} #required
-      with:
-        args: test
+
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.13
+        id: go
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+
+      - name: Get dependencies
+        run: |
+          go get -v -t -d ./...
+
+      - name: Build
+        run: go build -v .
+
+      - name: Fmt
+        with:
+          entrypoint: ./hack/fmt.sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Test
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CODECOV_TOKEN: ${{secrets.CODECOV_TOKEN}} #required
+        with:
+          entrypoint: ./hack/test.sh
