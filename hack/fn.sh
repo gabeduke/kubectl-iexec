@@ -71,7 +71,7 @@ go_test() {
         exit $SUCCESS
     fi
 
-    set+x
+    set +x
     if [ -z "$CODECOV_TOKEN" ]
     then
         echo "No Codecov token provided. Skipping.."

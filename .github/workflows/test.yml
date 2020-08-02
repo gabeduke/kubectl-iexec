@@ -1,3 +1,5 @@
+name: Test
+
 on:
   push:
     branches: [ develop ]
@@ -10,7 +12,7 @@ on:
 jobs:
 
   build:
-    name: Build
+    name: test
     runs-on: ubuntu-latest
     steps:
 
