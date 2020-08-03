@@ -114,6 +114,10 @@ func (o *IExecOptions) Complete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	if *o.configFlags.Namespace != "" {
+		o.namespace = *o.configFlags.Namespace
+	}
+
 	if o.allNamespaces {
 		o.namespace = ""
 	}
