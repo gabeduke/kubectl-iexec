@@ -3,23 +3,27 @@ on:
     tags: ["*"]
 name: Release
 jobs:
-  release:
+  goreleaser:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
-    - name: Set output
-      id: vars
-      run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
-    - name: generate-release-changelog
-      uses: docker://ferrarimarco/github-changelog-generator:1.15.0.pre.beta
-      env:
-        CHANGELOG_GITHUB_TOKEN: ${{ secrets.CHANGELOG_GITHUB_TOKEN }}
-        SRC_PATH: /github/workspace
-      with:
-        args: -u gabeduke -p kubectl-iexec --release-branch develop --future-release ${{ steps.vars.outputs.tag }}
-    - name: goreleaser
-      uses: docker://goreleaser/goreleaser
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    - name: Update new version in krew-index
-      uses: rajatjindal/krew-release-bot@v0.0.36
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      -
+        name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.14
+      -
+        name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v2
+        with:
+          version: latest
+          args: release --rm-dist
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      -
+        name: Update new version in krew-index
+        uses: rajatjindal/krew-release-bot@v0.0.36

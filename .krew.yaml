@@ -3,7 +3,7 @@ kind: Plugin
 metadata:
   name: iexec
 spec:
-  version: v{{ .TagName }}
+  version: {{ .TagName }}
   homepage: https://github.com/gabeduke/kubectl-iexec
   platforms:
     - selector:
