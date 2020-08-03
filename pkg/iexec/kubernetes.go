@@ -14,7 +14,7 @@ import (
 
 // get all pods from kubernetes API
 func getAllPods(client kubernetes.Interface, namespace string) (*corev1.PodList, error) {
-	pods, err := client.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{})
+	pods, err := client.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{FieldSelector: "status.phase=Running"})
 	if err != nil {
 		return pods, err
 	}
