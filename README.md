@@ -4,6 +4,8 @@
 
 # Kubectl Interactive Exec
 
+[![Get it from the Snap Store](https://snapcraft.io/static/images/badges/en/snap-store-white.svg)](https://snapcraft.io/kubectl-iexec)
+
 ## Summary
 
 `Kubectl-iexec` is a plugin providing an interactive selector to exec into a running pod. For a search filter, the plugin will return a list of pods and containers that match, then perform a `kubectl exec` to the selection.
