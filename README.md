@@ -1,8 +1,11 @@
 ![](https://github.com/gabeduke/kubectl-iexec/workflows/Test/badge.svg)
 ![](https://github.com/gabeduke/kubectl-iexec/workflows/Lint/badge.svg)
 ![](https://github.com/gabeduke/kubectl-iexec/workflows/Fmt/badge.svg)
+[![kubectl-iexec](https://snapcraft.io//kubectl-iexec/badge.svg)](https://snapcraft.io/kubectl-iexec)
 
 # Kubectl Interactive Exec
+
+[![Get it from the Snap Store](https://snapcraft.io/static/images/badges/en/snap-store-white.svg)](https://snapcraft.io/kubectl-iexec)
 
 ## Summary
 
