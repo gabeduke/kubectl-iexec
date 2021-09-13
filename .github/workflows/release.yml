@@ -1,7 +1,9 @@
+name: goreleaser
+
 on:
+  pull_request:
   push:
-    tags: ["*"]
-name: Release
+
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
@@ -15,11 +17,13 @@ jobs:
         name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.14
+          go-version: 1.15
       -
         name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
         with:
+          # either 'goreleaser' (default) or 'goreleaser-pro'
+          distribution: goreleaser
           version: latest
           args: release --rm-dist
         env:
