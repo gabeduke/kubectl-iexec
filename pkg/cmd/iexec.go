@@ -2,14 +2,14 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
+
 	"github.com/gabeduke/kubectl-iexec/pkg/iexec"
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-
-	"github.com/spf13/cobra"
-
-	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
 var (
@@ -38,7 +38,7 @@ Arg[2...] are the commands to be executed in the container
 `
 )
 
-// IExecOptions
+// IExecOptions configures the Iexec runner
 type IExecOptions struct {
 	configFlags *genericclioptions.ConfigFlags
 	clientCfg   *rest.Config
@@ -55,7 +55,7 @@ type IExecOptions struct {
 	genericclioptions.IOStreams
 }
 
-// NewIExecOptions provides an instance of IExecOptions with default values
+// NewIExecOptions provides an instance of IExecOptions with default values.
 func NewIExecOptions(streams genericclioptions.IOStreams) *IExecOptions {
 	return &IExecOptions{
 		configFlags: genericclioptions.NewConfigFlags(true),
@@ -64,7 +64,7 @@ func NewIExecOptions(streams genericclioptions.IOStreams) *IExecOptions {
 	}
 }
 
-// NewCmdIExec provides a cobra command wrapping IExecOptions
+// NewCmdIExec provides a cobra command wrapping IExecOptions.
 func NewCmdIExec(streams genericclioptions.IOStreams) *cobra.Command {
 	o := NewIExecOptions(streams)
 
@@ -102,7 +102,7 @@ func (o *IExecOptions) Complete(cmd *cobra.Command, args []string) error {
 
 	o.clientCfg, err = o.configFlags.ToRESTConfig()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "unable to get rest client")
 	}
 
 	c := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
@@ -111,7 +111,7 @@ func (o *IExecOptions) Complete(cmd *cobra.Command, args []string) error {
 
 	o.namespace, _, err = c.Namespace()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "unable to get namespace")
 	}
 
 	if *o.configFlags.Namespace != "" {
@@ -145,7 +145,6 @@ func (o *IExecOptions) Complete(cmd *cobra.Command, args []string) error {
 }
 
 func (o *IExecOptions) Run(args []string) error {
-
 	podFilter := args[0]
 
 	if len(args) > 1 {
