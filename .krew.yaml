@@ -9,8 +9,20 @@ spec:
     - selector:
         matchLabels:
           os: darwin
+          arch: arm64
+      {{addURIAndSha "https://github.com/gabeduke/kubectl-iexec/releases/download/{{ .TagName }}/kubectl-iexec_{{ .TagName }}_Darwin_arm64.tar.gz" .TagName | indent 6 }}
+      bin: kubectl-iexec
+    - selector:
+        matchLabels:
+          os: darwin
           arch: amd64
       {{addURIAndSha "https://github.com/gabeduke/kubectl-iexec/releases/download/{{ .TagName }}/kubectl-iexec_{{ .TagName }}_Darwin_x86_64.tar.gz" .TagName | indent 6 }}
+      bin: kubectl-iexec
+    - selector:
+        matchLabels:
+          os: linux
+          arch: arm64
+      {{addURIAndSha "https://github.com/gabeduke/kubectl-iexec/releases/download/{{ .TagName }}/kubectl-iexec_{{ .TagName }}_Linux_arm64.tar.gz" .TagName | indent 6}}
       bin: kubectl-iexec
     - selector:
         matchLabels:
