@@ -6,9 +6,6 @@ builds:
       goarch: 386
     - goos: linux
       goarch: 386
-    - goos: linux
-      goarch: arm
-      goarm: 7
 archives:
   - id: kubectl-iexec
     replacements:

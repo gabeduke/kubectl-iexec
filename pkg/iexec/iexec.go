@@ -2,20 +2,19 @@ package iexec
 
 import (
 	"fmt"
-	"github.com/manifoldco/promptui"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
+	"github.com/pkg/errors"
 	"os"
 
-	"golang.org/x/crypto/ssh/terminal"
-
+	"github.com/manifoldco/promptui"
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/term"
 	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 
-	// auth needed for proxy
+	// auth needed for proxy.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/remotecommand"
 )
 
@@ -40,7 +39,6 @@ type Iexec struct {
 }
 
 func NewIexec(restConfig *rest.Config, config *Config) *Iexec {
-
 	log.WithFields(log.Fields{
 		"containerFilter": config.ContainerFilter,
 		"remote command":  config.RemoteCmd,
@@ -53,8 +51,7 @@ func NewIexec(restConfig *rest.Config, config *Config) *Iexec {
 	return &Iexec{restConfig: restConfig, config: config}
 }
 
-func selectPod(pods []v1.Pod, config Config) (v1.Pod, error) {
-
+func selectPod(pods []corev1.Pod, config Config) (corev1.Pod, error) {
 	if len(pods) == 1 {
 		return pods[0], nil
 	}
@@ -74,14 +71,13 @@ func selectPod(pods []v1.Pod, config Config) (v1.Pod, error) {
 
 	i, _, err := podsPrompt.Run()
 	if err != nil {
-		return pods[i], err
+		return pods[i], errors.Wrap(err, "unable to run prompt")
 	}
 
 	return pods[i], nil
 }
 
-func containerPrompt(containers []v1.Container, config Config) (v1.Container, error) {
-
+func containerPrompt(containers []corev1.Container, config Config) (corev1.Container, error) {
 	if len(containers) == 1 {
 		return containers[0], nil
 	}
@@ -101,7 +97,7 @@ func containerPrompt(containers []v1.Container, config Config) (v1.Container, er
 
 	i, _, err := containersPrompt.Run()
 	if err != nil {
-		return containers[i], err
+		return containers[i], errors.Wrap(err, "unable to get prompt")
 	}
 
 	return containers[i], nil
@@ -110,7 +106,7 @@ func containerPrompt(containers []v1.Container, config Config) (v1.Container, er
 func (r *Iexec) Do() error {
 	client, err := kubernetes.NewForConfig(r.restConfig)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "unable to get kubernetes for config")
 	}
 
 	pods, err := getAllPods(client, r.config.Namespace)
@@ -151,10 +147,10 @@ func (r *Iexec) Do() error {
 	return nil
 }
 
-func exec(restCfg *rest.Config, pod v1.Pod, container v1.Container, cmd []string) error {
+func exec(restCfg *rest.Config, pod corev1.Pod, container corev1.Container, cmd []string) error {
 	client, err := kubernetes.NewForConfig(restCfg)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "unable to get kubernetes client config")
 	}
 
 	req := client.CoreV1().RESTClient().
@@ -178,22 +174,22 @@ func exec(restCfg *rest.Config, pod v1.Pod, container v1.Container, cmd []string
 
 	exec, err := remotecommand.NewSPDYExecutor(restCfg, "POST", req.URL())
 	if err != nil {
-		return err
+		return errors.Wrap(err, "unable to execute remote command")
 	}
 
 	// Put the terminal into raw mode to prevent it echoing characters twice.
-	oldState, err := terminal.MakeRaw(0)
+	oldState, err := term.MakeRaw(0)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "unable to init terminal")
 	}
 
-	termWidth, termHeight, _ := terminal.GetSize(0)
+	termWidth, termHeight, _ := term.GetSize(0)
 	termSize := remotecommand.TerminalSize{Width: uint16(termWidth), Height: uint16(termHeight)}
 	s := make(sizeQueue, 1)
 	s <- termSize
 
 	defer func() {
-		err := terminal.Restore(0, oldState)
+		err := term.Restore(0, oldState)
 		if err != nil {
 			log.Error(err)
 		}
@@ -208,7 +204,7 @@ func exec(restCfg *rest.Config, pod v1.Pod, container v1.Container, cmd []string
 		TerminalSizeQueue: s,
 	})
 	if err != nil {
-		return err
+		return errors.Wrap(err, "unable to stream shell process")
 	}
 
 	fmt.Println()

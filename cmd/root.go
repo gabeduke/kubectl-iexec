@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"os"
+
 	"github.com/gabeduke/kubectl-iexec/pkg/cmd"
 	"github.com/spf13/pflag"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
-	"os"
 )
 
 // Execute adds all child commands to the root command and sets flags appropriately.
