@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+
 	"github.com/pkg/errors"
 
 	"github.com/gabeduke/kubectl-iexec/pkg/iexec"
@@ -71,7 +72,6 @@ func NewCmdIExec(streams genericclioptions.IOStreams) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:          "iexec [pod filter] [remote command(s)] [flags]",
 		Short:        "Interactive remote shell into a Kubernetes Pod",
-		Args:         cobra.MinimumNArgs(1),
 		Example:      fmt.Sprintf(iexecExample, "kubectl"),
 		Long:         iexecLong,
 		SilenceUsage: false,
@@ -145,7 +145,11 @@ func (o *IExecOptions) Complete(cmd *cobra.Command, args []string) error {
 }
 
 func (o *IExecOptions) Run(args []string) error {
-	podFilter := args[0]
+	podFilter := ""
+
+	if len(args) > 0 {
+		podFilter = args[0]
+	}
 
 	if len(args) > 1 {
 		s := len(args)
