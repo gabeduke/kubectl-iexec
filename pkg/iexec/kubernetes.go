@@ -3,9 +3,10 @@ package iexec
 import (
 	"context"
 	"fmt"
-	"github.com/pkg/errors"
 	"sort"
 	"strings"
+
+	"github.com/pkg/errors"
 
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
@@ -18,6 +19,10 @@ func getAllPods(client kubernetes.Interface, namespace string) (*corev1.PodList,
 	pods, err := client.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{FieldSelector: "status.phase=Running"})
 	if err != nil {
 		return pods, errors.Wrap(err, "unable to get pods")
+	}
+
+	if len(pods.Items) == 0 {
+		return pods, errors.New("no running pods found")
 	}
 
 	log.WithFields(log.Fields{
