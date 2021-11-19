@@ -2,8 +2,9 @@ package iexec
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"os"
+
+	"github.com/pkg/errors"
 
 	"github.com/manifoldco/promptui"
 	log "github.com/sirupsen/logrus"
@@ -177,19 +178,21 @@ func exec(restCfg *rest.Config, pod corev1.Pod, container corev1.Container, cmd 
 		return errors.Wrap(err, "unable to execute remote command")
 	}
 
+	fd := int(os.Stdin.Fd())
+
 	// Put the terminal into raw mode to prevent it echoing characters twice.
-	oldState, err := term.MakeRaw(0)
+	oldState, err := term.MakeRaw(fd)
 	if err != nil {
 		return errors.Wrap(err, "unable to init terminal")
 	}
 
-	termWidth, termHeight, _ := term.GetSize(0)
+	termWidth, termHeight, _ := term.GetSize(fd)
 	termSize := remotecommand.TerminalSize{Width: uint16(termWidth), Height: uint16(termHeight)}
 	s := make(sizeQueue, 1)
 	s <- termSize
 
 	defer func() {
-		err := term.Restore(0, oldState)
+		err := term.Restore(fd, oldState)
 		if err != nil {
 			log.Error(err)
 		}
