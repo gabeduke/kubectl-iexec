@@ -77,7 +77,7 @@ TAG=$(curl -s https://api.github.com/repos/gabeduke/kubectl-iexec/releases/lates
 curl -LO https://github.com/gabeduke/kubectl-iexec/releases/download/${TAG}/kubectl-iexec_${TAG}_${OS:-Linux}_x86_64.tar.gz
 
 mkdir -p /tmp/kubectl-iexec
-tar -xzvf kubectl-iexec_0.1.9_${OS}_x86_64.tar.gz -C /tmp/kubectl-iexec
+tar -xzvf kubectl-iexec_${TAG}_${OS}_x86_64.tar.gz -C /tmp/kubectl-iexec
 chmod +x /tmp/kubectl-iexec/kubectl-iexec
 
 sudo mv /tmp/kubectl-iexec/kubectl-iexec /usr/local/bin
