@@ -4,9 +4,6 @@
 
 # Kubectl Interactive Exec
 
-
-<a href="https://www.buymeacoffee.com/dukemon" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
-
 ## Summary
 
 `Kubectl-iexec` is a plugin providing an interactive selector to exec into a running pod. For a search filter, the plugin will return a list of pods and containers that match, then perform a `kubectl exec` to the selection.
