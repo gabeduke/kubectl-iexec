@@ -50,6 +50,7 @@ type IExecOptions struct {
 	containerFilter string
 	lvl             string
 	namespace       string
+	labelSelector   string
 	naked           bool
 	vimMode         bool
 
@@ -89,7 +90,8 @@ func NewCmdIExec(streams genericclioptions.IOStreams) *cobra.Command {
 
 	cmd.Flags().BoolVarP(&o.allNamespaces, "all-namespaces", "A", o.allNamespaces, "If present, list the requested object(s) across all namespaces. Namespace in current context is ignored even if specified with --namespace.")
 	cmd.PersistentFlags().StringVarP(&o.containerFilter, "container", "c", "", "Container to search")
-	cmd.PersistentFlags().StringVarP(&o.lvl, "log-level", "l", "", "log level (trace|debug|info|warn|error|fatal|panic)")
+	cmd.PersistentFlags().StringVarP(&o.lvl, "log-level", "", "", "log level (trace|debug|info|warn|error|fatal|panic)")
+	cmd.PersistentFlags().StringVarP(&o.labelSelector, "selector", "l", "", "Selector (label query) to filter on, supports '=', '==', and '!='.(e.g. -l key1=value1,key2=value2)")
 	cmd.PersistentFlags().BoolVarP(&o.vimMode, "vim-mode", "v", false, "Vim Mode enabled")
 	cmd.PersistentFlags().BoolVarP(&o.naked, "naked", "x", false, "Decolorize output")
 	o.configFlags.AddFlags(cmd.Flags())
@@ -160,6 +162,7 @@ func (o *IExecOptions) Run(args []string) error {
 
 	config := &iexec.Config{
 		Namespace:       o.namespace,
+		LabelSelector:   o.labelSelector,
 		Naked:           o.naked,
 		VimMode:         o.vimMode,
 		PodFilter:       podFilter,

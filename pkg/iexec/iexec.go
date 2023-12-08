@@ -27,6 +27,7 @@ type Iexecer interface {
 
 type Config struct {
 	Namespace       string
+	LabelSelector   string
 	Naked           bool
 	VimMode         bool
 	PodFilter       string
@@ -47,6 +48,7 @@ func NewIexec(restConfig *rest.Config, config *Config) *Iexec {
 		"Vim Mode":        config.VimMode,
 		"Naked":           config.Naked,
 		"Namespace":       config.Namespace,
+		"LabelSelector":   config.LabelSelector,
 	}).Debug("iexec config values...")
 
 	return &Iexec{restConfig: restConfig, config: config}
@@ -110,7 +112,7 @@ func (r *Iexec) Do() error {
 		return errors.Wrap(err, "unable to get kubernetes for config")
 	}
 
-	pods, err := getAllPods(client, r.config.Namespace)
+	pods, err := getAllPods(client, r.config.Namespace, r.config.LabelSelector)
 	if err != nil {
 		return err
 	}
