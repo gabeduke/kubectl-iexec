@@ -21,4 +21,5 @@ jobs:
     - name: Bumpver
       run: go run hack/bump_version.go -dry-run=false
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # The user token must be used so that other github actons can be triggered
+        GITHUB_TOKEN: ${{ secrets.USER_GITHUB_TOKEN }}
