@@ -1,20 +1,20 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
 builds:
 - env:
   - CGO_ENABLED=0
   ignore:
     - goos: darwin
-      goarch: 386
+      goarch: "386"
     - goos: linux
-      goarch: 386
+      goarch: "386"
 archives:
   - id: kubectl-iexec
-    replacements:
-      darwin: Darwin
-      linux: Linux
-      windows: Windows
-      386: i386
-      amd64: x86_64
-    name_template: "{{ .ProjectName }}_{{ .Tag }}_{{ .Os }}_{{ .Arch }}"
+    name_template: >-
+      {{- .ProjectName }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
 checksum:
   name_template: 'checksums.txt'
 snapshot:
