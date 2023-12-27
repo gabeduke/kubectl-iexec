@@ -38,10 +38,11 @@ Usage:
 Flags:
   -c, --container string   Container to search
   -h, --help               help for iexec
-  -l, --log-level string   log level (trace|debug|info|warn|error|fatal|panic)
+  --log-level string   log level (trace|debug|info|warn|error|fatal|panic)
   -x, --naked              Decolorize output
   -n, --namespace string   Namespace to search
   -v, --vim-mode            Vim Mode enabled
+  -l, --label string        Label selector to filter pods
 ```
 
 
