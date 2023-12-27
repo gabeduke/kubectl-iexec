@@ -3,6 +3,7 @@ module github.com/gabeduke/kubectl-iexec
 go 1.18
 
 require (
+	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/google/go-github/v57 v57.0.0
 	github.com/manifoldco/promptui v0.8.0
 	github.com/pkg/errors v0.9.1

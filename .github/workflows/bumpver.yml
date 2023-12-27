@@ -19,6 +19,6 @@ jobs:
         go-version: 1.21
 
     - name: Bumpver
-      run: go run hack/bump_version.go -dry-run false
+      run: go run hack/bump_version.go -dry-run=false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
