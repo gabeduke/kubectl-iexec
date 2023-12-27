@@ -29,5 +29,5 @@ jobs:
         with:
           plugin-name: 'iexec'
           upstream-krew-index-owner: 'kubernetes-sigs'
-          env:
-            KREW_PLUGIN_RELEASE_TOKEN: ${{ secrets.KREW_INDEX }}
+        env:
+          KREW_PLUGIN_RELEASE_TOKEN: ${{ secrets.KREW_INDEX }}
