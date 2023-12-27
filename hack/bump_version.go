@@ -91,7 +91,8 @@ func incrementVersion(tag *semver.Version, bumpType string) (string, error) {
 	return newTag.String(), nil
 }
 
-func createNewTag(ctx context.Context, client *github.Client, owner string, repo string, newTag string, sha string, dryRun bool) {
+func createNewTag(ctx context.Context, client *github.Client, owner string, repo string, newTag string, dryRun bool) {
+	sha := os.Getenv("GITHUB_SHA")
 	ref := &github.Reference{
 		Ref: github.String("refs/tags/" + newTag),
 		Object: &github.GitObject{
@@ -162,5 +163,5 @@ func main() {
 		os.Exit(1)
 	}
 
-	createNewTag(ctx, client, owner, repo, newTag, *latestTagVersion.Tag.Commit.SHA, dryRun)
+	createNewTag(ctx, client, owner, repo, newTag, dryRun)
 }
