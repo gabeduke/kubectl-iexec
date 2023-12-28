@@ -29,6 +29,9 @@ jobs:
   krew-index:
     runs-on: ubuntu-latest
     steps:
+      - name: Sleep for 120 seconds
+        run: sleep 120s
+        shell: bash
       - name: Checkout
         uses: actions/checkout@v4
         with:
