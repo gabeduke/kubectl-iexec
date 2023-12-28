@@ -1,14 +1,20 @@
 name: Lint
 on: [pull_request]
+
+permissions:
+  contents: read
+
 jobs:
-  golangci-lint:
-    name: runner / golangci-lint
+  golangci:
+    name: lint
     runs-on: ubuntu-latest
     steps:
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v2
-      - name: golangci-lint
-        uses: reviewdog/action-golangci-lint@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
         with:
-          fail_on_error: true
-          filter_mode: nofilter
+          go-version: '1.21'
+          cache: false
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.54

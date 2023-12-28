@@ -5,6 +5,7 @@ on:
     tags: ["*"]
 
 jobs:
+
   goreleaser:
     runs-on: ubuntu-latest
     steps:
@@ -24,5 +25,9 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  krew-index:
+    runs-on: ubuntu-latest
+    steps:
       - name: Update new version in krew-index
         uses: rajatjindal/krew-release-bot@v0.0.46
