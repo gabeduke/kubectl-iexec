@@ -1,6 +1,7 @@
 package iexec
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -201,7 +202,7 @@ func exec(restCfg *rest.Config, pod corev1.Pod, container corev1.Container, cmd 
 	}()
 
 	// Connect this process' std{in,out,err} to the remote shell process.
-	err = exec.Stream(remotecommand.StreamOptions{
+	err = exec.StreamWithContext(context.Background(), remotecommand.StreamOptions{
 		Stdin:             os.Stdin,
 		Stdout:            os.Stdout,
 		Stderr:            os.Stderr,
