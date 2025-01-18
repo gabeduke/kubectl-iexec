@@ -60,8 +60,17 @@ func selectPod(pods []corev1.Pod, config Config) (corev1.Pod, error) {
 		return pods[0], nil
 	}
 
-	templates := podTemplate
+	// Open the terminal (tty) explicitly for rendering the menu
+	tty, err := os.OpenFile("/dev/tty", os.O_RDWR, 0)
+	if err != nil {
+		return corev1.Pod{}, errors.Wrap(err, "failed to open /dev/tty for prompt")
+	}
+	defer func() {
+		log.Trace("Closing TTY...")
+		tty.Close()
+	}()
 
+	templates := podTemplate
 	if config.Naked {
 		templates = podTemplateNaked
 	}
@@ -73,9 +82,11 @@ func selectPod(pods []corev1.Pod, config Config) (corev1.Pod, error) {
 		IsVimMode: config.VimMode,
 	}
 
+	// Run the prompt
 	i, _, err := podsPrompt.Run()
+
 	if err != nil {
-		return pods[i], errors.Wrap(err, "unable to run prompt")
+		return corev1.Pod{}, errors.Wrap(err, "unable to run prompt")
 	}
 
 	return pods[i], nil
@@ -86,8 +97,17 @@ func containerPrompt(containers []corev1.Container, config Config) (corev1.Conta
 		return containers[0], nil
 	}
 
-	templates := containerTemplates
+	// Open the terminal (tty) explicitly for rendering the menu
+	tty, err := os.OpenFile("/dev/tty", os.O_RDWR, 0)
+	if err != nil {
+		return corev1.Container{}, errors.Wrap(err, "failed to open /dev/tty for prompt")
+	}
+	defer func() {
+		log.Trace("Closing TTY...")
+		tty.Close()
+	}()
 
+	templates := containerTemplates
 	if config.Naked {
 		templates = containerTemplatesNaked
 	}
@@ -97,17 +117,35 @@ func containerPrompt(containers []corev1.Container, config Config) (corev1.Conta
 		Items:     containers,
 		Templates: templates,
 		IsVimMode: config.VimMode,
+		Stdout:    tty, // Render menu to the PTY
 	}
 
 	i, _, err := containersPrompt.Run()
 	if err != nil {
-		return containers[i], errors.Wrap(err, "unable to get prompt")
+		return corev1.Container{}, errors.Wrap(err, "unable to get prompt")
 	}
 
+	log.Trace("hello")
 	return containers[i], nil
 }
 
+func testTTY() error {
+	tty, err := os.OpenFile("/dev/tty", os.O_RDWR, 0)
+	if err != nil {
+		return errors.Wrap(err, "failed to open /dev/tty")
+	}
+	defer tty.Close()
+
+	_, err = tty.WriteString("Testing /dev/tty output...\n")
+	return err
+}
+
 func (r *Iexec) Do() error {
+	err := testTTY()
+	if err != nil {
+		return err
+	}
+
 	client, err := kubernetes.NewForConfig(r.restConfig)
 	if err != nil {
 		return errors.Wrap(err, "unable to get kubernetes for config")
@@ -189,7 +227,11 @@ func exec(restCfg *rest.Config, pod corev1.Pod, container corev1.Container, cmd 
 		return errors.Wrap(err, "unable to init terminal")
 	}
 
-	termWidth, termHeight, _ := term.GetSize(fd)
+	termWidth, termHeight, err := term.GetSize(fd)
+	if err != nil {
+		log.Errorf("Error getting terminal size: %v", err)
+	}
+
 	termSize := remotecommand.TerminalSize{Width: uint16(termWidth), Height: uint16(termHeight)}
 	s := make(sizeQueue, 1)
 	s <- termSize
@@ -202,6 +244,7 @@ func exec(restCfg *rest.Config, pod corev1.Pod, container corev1.Container, cmd 
 	}()
 
 	// Connect this process' std{in,out,err} to the remote shell process.
+	log.Trace("Starting exec.StreamWithContext...")
 	err = exec.StreamWithContext(context.Background(), remotecommand.StreamOptions{
 		Stdin:             os.Stdin,
 		Stdout:            os.Stdout,
@@ -209,6 +252,7 @@ func exec(restCfg *rest.Config, pod corev1.Pod, container corev1.Container, cmd 
 		Tty:               true,
 		TerminalSizeQueue: s,
 	})
+	log.Trace("Finished exec.StreamWithContext.")
 	if err != nil {
 		return errors.Wrap(err, "unable to stream shell process")
 	}
