@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"k8s.io/client-go/kubernetes"
 
 	"github.com/pkg/errors"
 
@@ -170,8 +171,21 @@ func (o *IExecOptions) Run(args []string) error {
 		RemoteCmd:       o.remoteCmd,
 	}
 
-	r := iexec.NewIexec(o.clientCfg, config)
+	// 1) Create a real Kubernetes clientset from o.clientCfg.
+	clientset, err := kubernetes.NewForConfig(o.clientCfg)
+	if err != nil {
+		log.Fatalf("Failed to create kubernetes client: %v", err)
+	}
 
+	// 2) Create your real implementations for the interfaces.
+	ui := iexec.NewPromptUITerminal()        // TerminalUI
+	k8s := iexec.NewRealK8sClient(clientset) // K8sClient
+	execRunner := iexec.NewSpdyExecRunner()  // ExecRunner
+
+	// 3) Pass them to NewIexec along with your config.
+	r := iexec.NewIexec(o.clientCfg, config, ui, k8s, execRunner)
+
+	// 4) Run!
 	if err := r.Do(); err != nil {
 		log.Fatal(err)
 	}

@@ -3,45 +3,38 @@ package iexec
 import (
 	"context"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"sort"
 	"strings"
 
-	"github.com/pkg/errors"
-
-	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
-// get all pods from kubernetes API.
-func getAllPods(client kubernetes.Interface, namespace, selector string) (*corev1.PodList, error) {
-	pods, err := client.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{FieldSelector: "status.phase=Running", LabelSelector: selector})
-	if err != nil {
-		return pods, errors.Wrap(err, "unable to get pods")
-	}
-
-	if len(pods.Items) == 0 {
-		return pods, errors.New("no running pods found")
-	}
-
-	log.WithFields(log.Fields{
-		"pods":      len(pods.Items),
-		"namespace": namespace,
-	}).Debug("total pods discovered...")
-
-	return pods, nil
+type RealK8sClient struct {
+	client kubernetes.Interface
 }
 
-func (r *Iexec) matchPods(pods *corev1.PodList) (corev1.PodList, error) {
+func NewRealK8sClient(client kubernetes.Interface) *RealK8sClient {
+	return &RealK8sClient{client: client}
+}
+
+func (r *RealK8sClient) FetchAllPods(namespace, labelSelector string) (*corev1.PodList, error) {
+	return r.client.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{
+		LabelSelector: labelSelector,
+	})
+}
+
+func (r *RealK8sClient) MatchPods(pods *corev1.PodList, config Config) (*corev1.PodList, error) {
 	var result corev1.PodList
 
 	log.WithFields(log.Fields{
-		"SearchFilter": r.config.PodFilter,
+		"SearchFilter": config.PodFilter,
 	}).Infof("Get all pods for podFilter...")
 
 	for i, pod := range pods.Items {
-		if strings.Contains(pod.GetName(), r.config.PodFilter) {
+		if strings.Contains(pod.GetName(), config.PodFilter) {
 			result.Items = append(result.Items, pod)
 			log.WithFields(log.Fields{
 				"PodName": pod.GetName(),
@@ -51,15 +44,15 @@ func (r *Iexec) matchPods(pods *corev1.PodList) (corev1.PodList, error) {
 	}
 
 	if len(result.Items) == 0 {
-		err := fmt.Errorf("no pods found for filter: %s", r.config.PodFilter)
+		err := fmt.Errorf("no pods found for filter: %s", config.PodFilter)
 
-		return result, err
+		return &result, err
 	}
 
-	return result, nil
+	return &result, nil
 }
 
-func matchContainers(pod corev1.Pod, config Config) ([]corev1.Container, error) {
+func (r *RealK8sClient) MatchContainers(pod corev1.Pod, config Config) ([]corev1.Container, error) {
 	if config.ContainerFilter == "" {
 		return pod.Spec.Containers, nil
 	}
