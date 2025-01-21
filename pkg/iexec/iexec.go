@@ -231,7 +231,6 @@ func exec(restCfg *rest.Config, pod corev1.Pod, container corev1.Container, cmd 
 	}()
 
 	// Connect this process' std{in,out,err} to the remote shell process.
-	log.Trace("Starting exec.StreamWithContext...")
 	err = exec.StreamWithContext(context.Background(), remotecommand.StreamOptions{
 		Stdin:             os.Stdin,
 		Stdout:            os.Stdout,
@@ -239,7 +238,6 @@ func exec(restCfg *rest.Config, pod corev1.Pod, container corev1.Container, cmd 
 		Tty:               true,
 		TerminalSizeQueue: s,
 	})
-	log.Trace("Finished exec.StreamWithContext.")
 	if err != nil {
 		return errors.Wrap(err, "unable to stream shell process")
 	}
