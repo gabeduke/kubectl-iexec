@@ -60,10 +60,9 @@ func selectPod(pods []corev1.Pod, config Config) (corev1.Pod, error) {
 		return pods[0], nil
 	}
 
-	// Open the terminal (tty) explicitly for rendering the menu
-	tty, err := os.OpenFile("/dev/tty", os.O_RDWR, 0)
+	tty, err := getTty()
 	if err != nil {
-		return corev1.Pod{}, errors.Wrap(err, "failed to open /dev/tty for prompt")
+		return corev1.Pod{}, err
 	}
 	defer func() {
 		log.Trace("Closing TTY...")
@@ -82,14 +81,20 @@ func selectPod(pods []corev1.Pod, config Config) (corev1.Pod, error) {
 		IsVimMode: config.VimMode,
 	}
 
-	// Run the prompt
 	i, _, err := podsPrompt.Run()
-
 	if err != nil {
-		return corev1.Pod{}, errors.Wrap(err, "unable to run prompt")
+		return pods[i], errors.Wrap(err, "unable to run prompt")
 	}
 
 	return pods[i], nil
+}
+
+func getTty() (*os.File, error) {
+	tty, err := os.OpenFile("/dev/tty", os.O_RDWR, 0)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to open /dev/tty for prompt")
+	}
+	return tty, nil
 }
 
 func containerPrompt(containers []corev1.Container, config Config) (corev1.Container, error) {
@@ -97,10 +102,9 @@ func containerPrompt(containers []corev1.Container, config Config) (corev1.Conta
 		return containers[0], nil
 	}
 
-	// Open the terminal (tty) explicitly for rendering the menu
-	tty, err := os.OpenFile("/dev/tty", os.O_RDWR, 0)
+	tty, err := getTty()
 	if err != nil {
-		return corev1.Container{}, errors.Wrap(err, "failed to open /dev/tty for prompt")
+		return corev1.Container{}, err
 	}
 	defer func() {
 		log.Trace("Closing TTY...")
@@ -117,35 +121,18 @@ func containerPrompt(containers []corev1.Container, config Config) (corev1.Conta
 		Items:     containers,
 		Templates: templates,
 		IsVimMode: config.VimMode,
-		Stdout:    tty, // Render menu to the PTY
+		Stdout:    tty,
 	}
 
 	i, _, err := containersPrompt.Run()
 	if err != nil {
-		return corev1.Container{}, errors.Wrap(err, "unable to get prompt")
+		return containers[i], errors.Wrap(err, "unable to get prompt")
 	}
 
-	log.Trace("hello")
 	return containers[i], nil
 }
 
-func testTTY() error {
-	tty, err := os.OpenFile("/dev/tty", os.O_RDWR, 0)
-	if err != nil {
-		return errors.Wrap(err, "failed to open /dev/tty")
-	}
-	defer tty.Close()
-
-	_, err = tty.WriteString("Testing /dev/tty output...\n")
-	return err
-}
-
 func (r *Iexec) Do() error {
-	err := testTTY()
-	if err != nil {
-		return err
-	}
-
 	client, err := kubernetes.NewForConfig(r.restConfig)
 	if err != nil {
 		return errors.Wrap(err, "unable to get kubernetes for config")
