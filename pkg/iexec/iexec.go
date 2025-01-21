@@ -60,8 +60,16 @@ func selectPod(pods []corev1.Pod, config Config) (corev1.Pod, error) {
 		return pods[0], nil
 	}
 
-	templates := podTemplate
+	tty, err := getTty()
+	if err != nil {
+		return corev1.Pod{}, err
+	}
+	defer func() {
+		log.Trace("Closing TTY...")
+		tty.Close()
+	}()
 
+	templates := podTemplate
 	if config.Naked {
 		templates = podTemplateNaked
 	}
@@ -81,13 +89,29 @@ func selectPod(pods []corev1.Pod, config Config) (corev1.Pod, error) {
 	return pods[i], nil
 }
 
+func getTty() (*os.File, error) {
+	tty, err := os.OpenFile("/dev/tty", os.O_RDWR, 0)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to open /dev/tty for prompt")
+	}
+	return tty, nil
+}
+
 func containerPrompt(containers []corev1.Container, config Config) (corev1.Container, error) {
 	if len(containers) == 1 {
 		return containers[0], nil
 	}
 
-	templates := containerTemplates
+	tty, err := getTty()
+	if err != nil {
+		return corev1.Container{}, err
+	}
+	defer func() {
+		log.Trace("Closing TTY...")
+		tty.Close()
+	}()
 
+	templates := containerTemplates
 	if config.Naked {
 		templates = containerTemplatesNaked
 	}
@@ -97,6 +121,7 @@ func containerPrompt(containers []corev1.Container, config Config) (corev1.Conta
 		Items:     containers,
 		Templates: templates,
 		IsVimMode: config.VimMode,
+		Stdout:    tty,
 	}
 
 	i, _, err := containersPrompt.Run()
@@ -189,7 +214,11 @@ func exec(restCfg *rest.Config, pod corev1.Pod, container corev1.Container, cmd 
 		return errors.Wrap(err, "unable to init terminal")
 	}
 
-	termWidth, termHeight, _ := term.GetSize(fd)
+	termWidth, termHeight, err := term.GetSize(fd)
+	if err != nil {
+		log.Errorf("Error getting terminal size: %v", err)
+	}
+
 	termSize := remotecommand.TerminalSize{Width: uint16(termWidth), Height: uint16(termHeight)}
 	s := make(sizeQueue, 1)
 	s <- termSize
