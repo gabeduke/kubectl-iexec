@@ -2,6 +2,7 @@ package iexec
 
 import (
 	"os"
+	"strings"
 
 	"github.com/manifoldco/promptui"
 	"github.com/pkg/errors"
@@ -44,6 +45,7 @@ func (p *PromptUITerminal) SelectPod(pods []corev1.Pod, config Config) (corev1.P
 		Stdout:    tty, // Render to the TTY
 		IsVimMode: config.VimMode,
 		Templates: templates,
+		Searcher:  podSearcher(pods),
 	}
 
 	i, _, err := prompt.Run()
@@ -77,10 +79,26 @@ func (p *PromptUITerminal) SelectContainer(containers []corev1.Container, config
 		Stdout:    tty,
 		IsVimMode: config.VimMode,
 		Templates: templates,
+		Searcher:  containerSearcher(containers),
 	}
 	i, _, err := prompt.Run()
 	if err != nil {
 		return corev1.Container{}, errors.Wrap(err, "promptui container selection failed")
 	}
 	return containers[i], nil
+}
+
+// podSearcher matches the "/" search input against "namespace/name", ignoring case.
+func podSearcher(pods []corev1.Pod) func(string, int) bool {
+	return func(input string, index int) bool {
+		target := strings.ToLower(pods[index].Namespace + "/" + pods[index].Name)
+		return strings.Contains(target, strings.ToLower(strings.TrimSpace(input)))
+	}
+}
+
+// containerSearcher matches the "/" search input against the container name, ignoring case.
+func containerSearcher(containers []corev1.Container) func(string, int) bool {
+	return func(input string, index int) bool {
+		return strings.Contains(strings.ToLower(containers[index].Name), strings.ToLower(strings.TrimSpace(input)))
+	}
 }

@@ -14,6 +14,9 @@ This is a maintained fork of [gabeduke/kubectl-iexec](https://github.com/gabeduk
 - WebSocket exec with SPDY fallback (like modern `kubectl`), raw terminal mode and live resize
 - Clean output when stdin or stdout is piped (`kubectl iexec api printenv | sort > .env`)
 - `--first` to skip the prompts
+- Search in the pod and container pickers: press `/` and type part of `namespace/name`
+- Pods that are not `Running` or are terminating are skipped (`--all-phases` to keep them)
+- Default shell is `bash` with a fallback to `sh` for alpine and busybox images
 - Releases signed with cosign, with SBOMs and provenance, published to a Krew index
 
 ## Install
