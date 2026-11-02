@@ -70,6 +70,7 @@ type IExecOptions struct {
 	naked           bool
 	vimMode         bool
 	first           bool
+	allPhases       bool
 
 	genericclioptions.IOStreams
 }
@@ -112,6 +113,7 @@ func NewCmdIExec(streams genericclioptions.IOStreams) *cobra.Command {
 	cmd.PersistentFlags().BoolVarP(&o.vimMode, "vim-mode", "v", false, "Vim Mode enabled")
 	cmd.PersistentFlags().BoolVarP(&o.naked, "naked", "x", false, "Decolorize output")
 	cmd.PersistentFlags().BoolVarP(&o.first, "first", "", false, "Skip the prompts and use the first matching pod and container")
+	cmd.PersistentFlags().BoolVarP(&o.allPhases, "all-phases", "", false, "Include pods that are not Running or are terminating")
 	o.configFlags.AddFlags(cmd.Flags())
 
 	return cmd
@@ -179,6 +181,7 @@ func (o *IExecOptions) Run(args []string) error {
 		Naked:           o.naked,
 		VimMode:         o.vimMode,
 		First:           o.first,
+		AllPhases:       o.allPhases,
 		PodFilter:       podFilter,
 		ContainerFilter: o.containerFilter,
 		RemoteCmd:       o.remoteCmd,

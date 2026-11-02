@@ -63,6 +63,7 @@ kubectl iexec busybox --first cat /etc/hosts
 | `-c, --container` | Container name filter |
 | `-l, --selector` | Label selector to filter pods (`key1=value1,key2=value2`) |
 | `--first` | Skip the prompts and use the first matching pod and container |
+| `--all-phases` | Include pods that are not `Running` or are terminating (skipped by default) |
 | `-A, --all-namespaces` | Search pods across all namespaces |
 | `-n, --namespace` | Namespace to search |
 | `-v, --vim-mode` | Vim keys in the prompts |
