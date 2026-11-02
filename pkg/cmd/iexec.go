@@ -2,10 +2,11 @@ package cmd
 
 import (
 	"fmt"
+	"k8s.io/client-go/kubernetes"
 
 	"github.com/pkg/errors"
 
-	"github.com/gabeduke/kubectl-iexec/pkg/iexec"
+	"github.com/PixiBixi/kubectl-iexec/v2/pkg/iexec"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -24,7 +25,7 @@ Arg[2...] are the commands to be executed in the container
 `
 	iexecExample = `
 	# select from all pods in the namespace then run: 'kubectl exec sh'
-	%[1]s iexec 
+	%[1]s iexec
 
 	# select from all pods matching [busybox] then run: 'kubectl exec [pod_name] /bin/sh'
 	%[1]s iexec busybox
@@ -36,6 +37,9 @@ Arg[2...] are the commands to be executed in the container
 	# then select from all containers in pod matching [second_container]
 	# then run: 'kubectl exec [pod_name] [container_name] /bin/sh'
 	%[1]s iexec multi_container_pod -c second_container
+
+	# skip the prompts and run in the first matching pod and container
+	%[1]s iexec busybox --first cat /etc/hosts
 `
 )
 
@@ -53,6 +57,7 @@ type IExecOptions struct {
 	labelSelector   string
 	naked           bool
 	vimMode         bool
+	first           bool
 
 	genericclioptions.IOStreams
 }
@@ -94,6 +99,7 @@ func NewCmdIExec(streams genericclioptions.IOStreams) *cobra.Command {
 	cmd.PersistentFlags().StringVarP(&o.labelSelector, "selector", "l", "", "Selector (label query) to filter on, supports '=', '==', and '!='.(e.g. -l key1=value1,key2=value2)")
 	cmd.PersistentFlags().BoolVarP(&o.vimMode, "vim-mode", "v", false, "Vim Mode enabled")
 	cmd.PersistentFlags().BoolVarP(&o.naked, "naked", "x", false, "Decolorize output")
+	cmd.PersistentFlags().BoolVarP(&o.first, "first", "", false, "Skip the prompts and use the first matching pod and container")
 	o.configFlags.AddFlags(cmd.Flags())
 
 	return cmd
@@ -165,13 +171,27 @@ func (o *IExecOptions) Run(args []string) error {
 		LabelSelector:   o.labelSelector,
 		Naked:           o.naked,
 		VimMode:         o.vimMode,
+		First:           o.first,
 		PodFilter:       podFilter,
 		ContainerFilter: o.containerFilter,
 		RemoteCmd:       o.remoteCmd,
 	}
 
-	r := iexec.NewIexec(o.clientCfg, config)
+	// 1) Create a real Kubernetes clientset from o.clientCfg.
+	clientset, err := kubernetes.NewForConfig(o.clientCfg)
+	if err != nil {
+		log.Fatalf("Failed to create kubernetes client: %v", err)
+	}
 
+	// 2) Create your real implementations for the interfaces.
+	ui := iexec.NewPromptUITerminal()         // TerminalUI
+	k8s := iexec.NewRealK8sClient(clientset)  // K8sClient
+	execRunner := iexec.NewStreamExecRunner() // ExecRunner
+
+	// 3) Pass them to NewIexec along with your config.
+	r := iexec.NewIexec(o.clientCfg, config, ui, k8s, execRunner)
+
+	// 4) Run!
 	if err := r.Do(); err != nil {
 		log.Fatal(err)
 	}

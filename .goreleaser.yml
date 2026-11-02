@@ -1,28 +1,89 @@
-# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+    - go mod verify
+
 builds:
-- env:
-  - CGO_ENABLED=0
-  ignore:
-    - goos: darwin
-      goarch: "386"
-    - goos: linux
-      goarch: "386"
-archives:
   - id: kubectl-iexec
+    binary: kubectl-iexec
+    env:
+      - CGO_ENABLED=0
+    goos: [linux, darwin]
+    goarch: [amd64, arm64]
+    ldflags:
+      - -s # implies -w
+
+archives:
+  - id: default
+    formats: [tar.gz]
     name_template: >-
-      {{- .ProjectName }}_
-      {{- .Tag }}_
+      {{ .ProjectName }}_
+      {{- .Version }}_
       {{- title .Os }}_
       {{- if eq .Arch "amd64" }}x86_64
-      {{- else if eq .Arch "386" }}i386
       {{- else }}{{ .Arch }}{{ end }}
+    files:
+      - README.md
+      - LICENSE*
+
+krews:
+  - name: iexec
+    ids: [default]
+    repository:
+      owner: PixiBixi
+      name: krew-index
+      branch: main
+      token: "{{ .Env.KREW_INDEX_TOKEN }}"
+    homepage: "https://github.com/PixiBixi/kubectl-iexec"
+    short_description: "Interactive selection tool for kubectl exec"
+    description: |
+      Interactive pod and container selector for kubectl exec. The first
+      argument filters pods, the rest is the command to run in the chosen
+      container (default: /bin/sh). Use --first to skip the prompts.
+    caveats: |
+      Run 'kubectl iexec --help' for usage.
+    skip_upload: auto
+
+sboms:
+  - artifacts: archive
+
+signs:
+  - cmd: cosign
+    signature: "${artifact}.sigstore.json"
+    args:
+      - sign-blob
+      - "--bundle=${signature}"
+      - "${artifact}"
+      - "--yes"
+    artifacts: checksum
+
 checksum:
   name_template: 'checksums.txt'
+
 snapshot:
-  name_template: "{{ .Tag }}-next"
+  version_template: "{{ incpatch .Version }}-next"
+
 changelog:
   sort: asc
   filters:
-    exclude:
-    - '^docs:'
-    - '^test:'
+    exclude: ['^docs:', '^test:', '^chore:', 'typo']
+  groups:
+    - title: Features
+      regexp: '^feat'
+      order: 0
+    - title: Bug Fixes
+      regexp: '^fix'
+      order: 1
+    - title: Others
+      order: 999
+
+release:
+  github:
+    owner: PixiBixi
+    name: kubectl-iexec
+  name_template: "{{.ProjectName}} {{.Version}}"
+  draft: false
+  prerelease: auto
+  mode: replace

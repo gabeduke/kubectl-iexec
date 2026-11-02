@@ -1,82 +1,86 @@
-![](https://github.com/gabeduke/kubectl-iexec/workflows/Test/badge.svg)
-![](https://github.com/gabeduke/kubectl-iexec/workflows/Lint/badge.svg)
-![](https://github.com/gabeduke/kubectl-iexec/workflows/Fmt/badge.svg)
+# kubectl-iexec
 
-# Kubectl Interactive Exec
+[![CI](https://github.com/PixiBixi/kubectl-iexec/actions/workflows/ci.yml/badge.svg)](https://github.com/PixiBixi/kubectl-iexec/actions/workflows/ci.yml)
+[![Lint](https://github.com/PixiBixi/kubectl-iexec/actions/workflows/lint.yml/badge.svg)](https://github.com/PixiBixi/kubectl-iexec/actions/workflows/lint.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-## Summary
+Interactive `kubectl exec`: filter pods by name, pick a pod and a container from a list, and get a shell (or run a command) in it.
 
-`Kubectl-iexec` is a plugin providing an interactive selector to exec into a running pod. For a search filter, the plugin will return a list of pods and containers that match, then perform a `kubectl exec` to the selection.
+This is a maintained fork of [gabeduke/kubectl-iexec](https://github.com/gabeduke/kubectl-iexec), which has been inactive since 2023. All credit for the original design and code goes to gabeduke. The fork keeps the MIT license and the original copyright.
 
-_Notes:_
+## What changed compared to upstream
 
-Kubectl >= `v1.12.0` is required for plugins to work
+- Go 1.27, client-go 0.37, current dependencies
+- WebSocket exec with SPDY fallback (like modern `kubectl`), raw terminal mode and live resize
+- Clean output when stdin or stdout is piped (`kubectl iexec api printenv | sort > .env`)
+- `--first` to skip the prompts
+- Releases signed with cosign, with SBOMs and provenance, published to a Krew index
 
-For more information on kuberctl plugins see [documentation](https://kubernetes.io/docs/tasks/extend-kubectl/kubectl-plugins/)
+## Install
 
+With [Krew](https://krew.sigs.k8s.io/):
 
-## Usage:
-
+```bash
+kubectl krew index add pixibixi https://github.com/PixiBixi/krew-index
+kubectl krew install pixibixi/iexec
 ```
-$ kubectl iexec --help
 
-Kubectl-iexec is an interactive pod and container selector for `kubectl exec`
+With Go:
 
-Arg[1] will act as a filter, any pods that match will be returned in a list
-that the user can select from. Subsequent args make up the array of commands that
-should be executed on the pod.
+```bash
+go install github.com/PixiBixi/kubectl-iexec/v2@latest
+```
 
-example:
-kubectl iexec busybox /bin/sh
+The binary must be named `kubectl-iexec` and be on your `PATH`. Prebuilt archives for Linux and macOS (amd64, arm64) are on the [releases page](https://github.com/PixiBixi/kubectl-iexec/releases).
 
-example:
+## Usage
+
+```text
+kubectl iexec [pod filter] [remote command(s)] [flags]
+```
+
+The first argument filters pods by name. The remaining arguments are the command to run (default: `/bin/sh`).
+
+```bash
+# pick from all pods in the namespace, then open /bin/sh
+kubectl iexec
+
+# pick from pods matching "busybox"
+kubectl iexec busybox
+
+# run a command
 kubectl iexec busybox cat /etc/hosts
 
-Usage:
-  iexec [pod filter] [remote command(s)] [flags]
+# pick a pod, then a container matching "second_container"
+kubectl iexec multi-container-pod -c second_container
 
-Flags:
-  -c, --container string   Container to search
-  -h, --help               help for iexec
-  --log-level string   log level (trace|debug|info|warn|error|fatal|panic)
-  -x, --naked              Decolorize output
-  -n, --namespace string   Namespace to search
-  -v, --vim-mode            Vim Mode enabled
-  -l, --label string        Label selector to filter pods
+# no prompt: first matching pod and container
+kubectl iexec busybox --first cat /etc/hosts
 ```
 
+| Flag | Description |
+| --- | --- |
+| `-c, --container` | Container name filter |
+| `-l, --selector` | Label selector to filter pods (`key1=value1,key2=value2`) |
+| `--first` | Skip the prompts and use the first matching pod and container |
+| `-A, --all-namespaces` | Search pods across all namespaces |
+| `-n, --namespace` | Namespace to search |
+| `-v, --vim-mode` | Vim keys in the prompts |
+| `-x, --naked` | Decolorize output |
+| `--log-level` | `trace`, `debug`, `info`, `warn`, `error`, `fatal` or `panic` |
 
-[![asciicast](https://asciinema.org/a/kW4u4sPSaFo77O7BaSwMM1Kuh.svg)](https://asciinema.org/a/kW4u4sPSaFo77O7BaSwMM1Kuh)
+The usual kubectl connection flags (`--context`, `--kubeconfig`, `--server`, ...) are also accepted.
 
+## Development
 
-## Install:
-
-To install the plugin, the binary simply needs to be somewhere on your path in the format kubectl-[plugin_name]. the simplest way to do this is to `go get` the package:
-
-`go get -u github.com/gabeduke/kubectl-iexec`
-
-Alternatively you may pull the binary from the releases page on Github:
-
-Select OS
 ```bash
-# Linux
-OS=LINUX
-
-# Mac
-OS=DARWIN
+make build   # build ./kubectl-iexec
+make test    # go test -race ./...
+make lint    # golangci-lint
 ```
 
-Run:
-```bash
-# Get latest release
-TAG=$(curl -s https://api.github.com/repos/gabeduke/kubectl-iexec/releases/latest | grep -oP '"tag_name": "\K(.*)(?=")')
+See [AGENTS.md](AGENTS.md) for the full workflow and [SECURITY.md](SECURITY.md) to report a vulnerability.
 
-# Donwload and extract binary to /usr/local/bin
-curl -LO https://github.com/gabeduke/kubectl-iexec/releases/download/${TAG}/kubectl-iexec_${TAG}_${OS:-Linux}_x86_64.tar.gz
+## License
 
-mkdir -p /tmp/kubectl-iexec
-tar -xzvf kubectl-iexec_${TAG}_${OS}_x86_64.tar.gz -C /tmp/kubectl-iexec
-chmod +x /tmp/kubectl-iexec/kubectl-iexec
-
-sudo mv /tmp/kubectl-iexec/kubectl-iexec /usr/local/bin
-```
+MIT, see [LICENSE](LICENSE). Original copyright notice kept.

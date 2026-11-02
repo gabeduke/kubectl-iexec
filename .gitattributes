@@ -83,4 +83,3 @@
 .gitattributes  export-ignore
 .gitignore      export-ignore
 snap/plugins/go_local.py export-ignore
-

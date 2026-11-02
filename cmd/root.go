@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/gabeduke/kubectl-iexec/pkg/cmd"
+	"github.com/PixiBixi/kubectl-iexec/v2/pkg/cmd"
 	"github.com/spf13/pflag"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )

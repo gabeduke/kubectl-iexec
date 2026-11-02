@@ -1,0 +1,8 @@
+# Prose is not hard-wrapped (GitHub and the wikis wrap it), so a line-length
+# limit would only force reflowing paragraphs and break table rows.
+MD013: false
+
+# README uses no inline HTML today; keep the same allowlist as other repos in
+# case a centered header is added.
+MD033:
+  allowed_elements: [p, a, img, br, details, summary]

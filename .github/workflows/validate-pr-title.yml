@@ -1,0 +1,29 @@
+name: Validate PR title
+
+on:
+  # pull_request and not pull_request_target: the action reads the title from the
+  # event payload, so it needs neither the base repo's token nor a checkout of
+  # the PR's code. Using the privileged trigger here would buy nothing and hand a
+  # fork's branch a token, which is what zizmor's dangerous-triggers flags.
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+permissions: {}
+
+jobs:
+  validate:
+    name: Conventional Commits
+    runs-on: ubuntu-26.04
+    permissions:
+      pull-requests: read
+    steps:
+      - name: Harden the runner
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        with:
+          egress-policy: audit
+      # The squash commit takes the PR title, and svu computes the next version
+      # from those commits. A title outside the convention means svu sees nothing
+      # releasable and the release is skipped silently, with no error anywhere.
+      - uses: amannn/action-semantic-pull-request@48f256284bd46cdaab1048c3721360e808335d50 # v6.1.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

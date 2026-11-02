@@ -1,0 +1,37 @@
+name: Go format
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions: {}
+
+jobs:
+  goimports:
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Harden the runner
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: Install goimports
+        env:
+          # renovate: datasource=go depName=golang.org/x/tools
+          GOIMPORTS_VERSION: v0.52.0
+        run: go install "golang.org/x/tools/cmd/goimports@${GOIMPORTS_VERSION}"
+      - name: Format all .go files
+        run: find . -name '*.go' -exec goimports -w {} +
+      - uses: reviewdog/action-suggester@ac5ce6d94e35c00530447dc63c271e38e4fd36c6 # v1.26.3
+        with:
+          tool_name: goimports

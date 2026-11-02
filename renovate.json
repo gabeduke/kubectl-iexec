@@ -1,0 +1,82 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "osvVulnerabilityAlerts": true,
+  "lockFileMaintenance": { "enabled": true, "automerge": true },
+  "extends": [
+    "config:recommended",
+    "helpers:pinGitHubActionDigests"
+  ],
+  "labels": ["dependencies"],
+  "assignees": ["PixiBixi"],
+  "semanticCommits": "enabled",
+  "postUpdateOptions": ["gomodTidy", "gomodUpdateImportPaths"],
+  "pinDigests": true,
+  "packageRules": [
+    {
+      "description": "golangci-lint-action's version input takes a tag, not a digest: pinning it failed the whole github-actions group with update failure",
+      "matchDepNames": ["golangci/golangci-lint"],
+      "pinDigests": false
+    },
+    {
+      "description": "Cooldown before automerge picks up a release: a hijacked package is usually spotted and yanked within days. digest is in here because a digest-only update means an upstream tag moved onto another commit. vulnerabilityAlerts overrides this, so CVE fixes still land at once",
+      "matchUpdateTypes": ["major", "minor", "patch", "digest"],
+      "minimumReleaseAge": "5 days"
+    },
+    {
+      "description": "Docker digests carry no release timestamp: under the default timestamp-required, minimumReleaseAge held them forever",
+      "matchUpdateTypes": ["digest"],
+      "minimumReleaseAgeBehaviour": "timestamp-optional"
+    },
+    {
+      "description": "Automerge all safe updates (minor/patch/digest) via PR once CI passes",
+      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "automerge": true,
+      "automergeType": "pr"
+    },
+    {
+      "description": "Minor Go module bumps ship in the binary -> cut a minor release",
+      "matchManagers": ["gomod"],
+      "matchUpdateTypes": ["minor"],
+      "semanticCommitType": "feat"
+    },
+    {
+      "description": "Patch/digest Go module bumps ship in the binary -> cut a patch release",
+      "matchManagers": ["gomod"],
+      "matchUpdateTypes": ["patch", "digest"],
+      "semanticCommitType": "fix"
+    },
+    {
+      "description": "Actions do not ship in the binary -> no release. github-runners is a datasource rather than a manager, so the github-actions manager carries the runner labels too",
+      "matchManagers": ["github-actions"],
+      "groupName": "github-actions",
+      "semanticCommitType": "chore"
+    },
+    {
+      "description": "Go toolchain updates. Both depTypes are needed: golang is the go directive, which Renovate leaves alone unless rangeStrategy bump unlocks it, toolchain is the toolchain directive, which it bumps by default",
+      "matchManagers": ["gomod"],
+      "matchDepTypes": ["golang", "toolchain"],
+      "matchDepNames": ["go"],
+      "rangeStrategy": "bump",
+      "groupName": "go-toolchain"
+    },
+    {
+      "description": "Kubernetes modules share a v0.x release train and must move in lockstep; batch them into one PR",
+      "matchManagers": ["gomod"],
+      "matchPackageNames": ["k8s.io/**", "sigs.k8s.io/**"],
+      "groupName": "kubernetes"
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Tools pinned as plain env vars in the workflows (svu, goimports), which no built-in manager sees",
+      "managerFilePatterns": [
+        "/^\\.github/workflows/.+\\.yml$/"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>[a-z-]+?) depName=(?<depName>.+?)\\s+[A-Z0-9_]+_VERSION: (?<currentValue>.+?)\\s"
+      ],
+      "versioningTemplate": "semver"
+    }
+  ]
+}
