@@ -39,7 +39,7 @@ The binary must be named `kubectl-iexec` and be on your `PATH`. Prebuilt archive
 kubectl iexec [pod filter] [remote command(s)] [flags]
 ```
 
-The first argument filters pods by name. The remaining arguments are the command to run (default: `/bin/sh`).
+The first argument filters pods by name. The remaining arguments are the command to run (default: `bash` when the image has it, `sh` otherwise).
 
 ```bash
 # pick from all pods in the namespace, then open /bin/sh
