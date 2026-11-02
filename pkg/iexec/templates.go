@@ -26,6 +26,6 @@ var containerTemplates = &promptui.SelectTemplates{
 
 var containerTemplatesNaked = &promptui.SelectTemplates{
 	Active:   fmt.Sprintf("Container: %s {{ .Name }}", promptui.IconSelect),
-	Inactive: "Container: {{ . }}",
+	Inactive: "Container: {{ .Name }}",
 	Selected: fmt.Sprintf("Container: %s {{ .Name }}", promptui.IconGood),
 }
